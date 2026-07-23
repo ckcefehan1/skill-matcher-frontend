@@ -7,6 +7,8 @@ import { PasswordResetPage } from '@/features/auth/password-reset-page';
 import { PasswordResetConfirmPage } from '@/features/auth/password-reset-confirm-page';
 import { InvitationAcceptPage } from '@/features/auth/invitation-accept-page';
 import { ChangePasswordPage } from '@/features/auth/change-password-page';
+import { AdminUsersPage } from '@/features/admin/admin-users-page';
+import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { useAuthStore } from '@/stores/auth-store';
 
 // public
@@ -38,7 +40,7 @@ const passwordResetConfirmRoute = createRoute({
 const dashboardRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/',
-  component: () => <div>Dashboard (TODO)</div>,
+  component: DashboardPage,
 });
 
 const skillsRoute = createRoute({
@@ -80,7 +82,7 @@ const adminUsersRoute = createRoute({
       throw redirect({ to: '/' });
     }
   },
-  component: () => <div>Admin Users (TODO)</div>,
+  component: AdminUsersPage,
 });
 
 const changePasswordRoute = createRoute({
