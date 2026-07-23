@@ -1,6 +1,7 @@
 import Axios from 'axios';
 import type { AxiosRequestConfig, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
+import type { AuthResponse } from '@/api/generated/model';
 
 export const axiosInstance = Axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -61,15 +62,21 @@ axiosInstance.interceptors.response.use(
     }
 
     try {
-      const { data } = await Axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+      const { data } = await Axios.post<AuthResponse>(
+        '/api/auth/refresh',
         { refreshToken },
       );
 
-      setTokens(data.accessToken, data.refreshToken);
-      processQueue(null, data.accessToken);
+      const newAccessToken = data.accessToken;
+      const newRefreshToken = data.refreshToken;
+      if (!newAccessToken || !newRefreshToken) {
+        throw new Error('Refresh response missing tokens');
+      }
 
-      originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+      setTokens(newAccessToken, newRefreshToken);
+      processQueue(null, newAccessToken);
+
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return axiosInstance(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
