@@ -1,31 +1,37 @@
-import { createRoute, createRouter } from '@tanstack/react-router';
+import { createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { rootRoute } from './__root';
 import { authenticatedRoute } from './authenticated';
 import { publicRoute } from './public';
+import { LoginPage } from '@/features/auth/login-page';
+import { PasswordResetPage } from '@/features/auth/password-reset-page';
+import { PasswordResetConfirmPage } from '@/features/auth/password-reset-confirm-page';
+import { InvitationAcceptPage } from '@/features/auth/invitation-accept-page';
+import { ChangePasswordPage } from '@/features/auth/change-password-page';
+import { useAuthStore } from '@/stores/auth-store';
 
 // public
 const loginRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: '/login',
-  component: () => <div>Login (TODO)</div>,
+  component: LoginPage,
 });
 
 const invitationAcceptRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: '/invitations/accept',
-  component: () => <div>Invitation Accept (TODO)</div>,
+  component: InvitationAcceptPage,
 });
 
 const passwordResetRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: '/password-reset',
-  component: () => <div>Password Reset Request (TODO)</div>,
+  component: PasswordResetPage,
 });
 
 const passwordResetConfirmRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: '/password-reset/confirm',
-  component: () => <div>Password Reset Confirm (TODO)</div>,
+  component: PasswordResetConfirmPage,
 });
 
 // authenticated
@@ -68,7 +74,19 @@ const matchingRoute = createRoute({
 const adminUsersRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/admin/users',
+  beforeLoad: () => {
+    const { user } = useAuthStore.getState();
+    if (user?.role !== 'ADMIN') {
+      throw redirect({ to: '/' });
+    }
+  },
   component: () => <div>Admin Users (TODO)</div>,
+});
+
+const changePasswordRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: '/change-password',
+  component: ChangePasswordPage,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -86,6 +104,7 @@ const routeTree = rootRoute.addChildren([
     projectDetailRoute,
     matchingRoute,
     adminUsersRoute,
+    changePasswordRoute,
   ]),
 ]);
 

@@ -1,6 +1,7 @@
 import Axios from 'axios';
 import type { AxiosRequestConfig, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
+import type { AuthResponse } from '@/api/generated/model';
 
 export const axiosInstance = Axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -61,8 +62,8 @@ axiosInstance.interceptors.response.use(
     }
 
     try {
-      const { data } = await Axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+      const { data } = await Axios.post<AuthResponse>(
+        '/api/auth/refresh',
         { refreshToken },
       );
 
