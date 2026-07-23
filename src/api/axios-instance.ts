@@ -32,6 +32,15 @@ const processQueue = (error: unknown, token: string | null) => {
   failedQueue = [];
 };
 
+// ponytail: orval generated some GETs with responseType 'blob' (missing OpenAPI schema).
+// Parse JSON blobs back to objects here; remove once orval is regenerated with fixed spec.
+axiosInstance.interceptors.response.use(async (response) => {
+  if (response.data instanceof Blob && response.data.type === 'application/json') {
+    response.data = JSON.parse(await response.data.text());
+  }
+  return response;
+});
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {

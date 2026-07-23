@@ -1,10 +1,19 @@
-import { createRoute, Outlet, redirect, useNavigate, Link } from '@tanstack/react-router';
+import { createRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router';
+import { Menu } from 'lucide-react';
 import { rootRoute } from './__root';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLogout } from '@/api/generated/endpoints/authentication/authentication';
+import { AppSidebar } from '@/components/app-sidebar';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-function AuthenticatedLayout() {
+function MobileMenu() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const storeLogout = useAuthStore((s) => s.logout);
@@ -19,36 +28,55 @@ function AuthenticatedLayout() {
     });
   };
 
+  const items = [
+    { to: '/', label: 'Dashboard' },
+    { to: '/projects', label: 'Projekte' },
+    { to: '/matching', label: 'Matching' },
+    { to: '/skills', label: 'Skills' },
+    ...(user?.role === 'ADMIN'
+      ? [{ to: '/admin/users', label: 'Benutzer' }]
+      : [{ to: '/availability', label: 'Verfügbarkeit' }]),
+  ];
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b px-6 py-3">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="size-2 rounded-full bg-primary" />
-          <span className="text-sm font-medium tracking-tight">Skill Matcher</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
-            {user?.firstName} {user?.lastName}
-          </span>
-          <Link
-            to="/change-password"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            Passwort ändern
-          </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onLogout}
-            disabled={logoutMutation.isPending}
-          >
-            Abmelden
+    <div className="flex h-14 items-center justify-between border-b bg-card px-4 md:hidden">
+      <div className="flex items-center gap-2">
+        <div className="size-2 rounded-full bg-primary" />
+        <span className="text-sm font-medium tracking-tight">Skill Matcher</span>
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Menü öffnen">
+            <Menu className="size-5" aria-hidden />
           </Button>
-        </div>
-      </header>
-      <main className="flex-1 p-6">
-        <Outlet />
-      </main>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {items.map((item) => (
+            <DropdownMenuItem key={item.to} onClick={() => navigate({ to: item.to })}>
+              {item.label}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => navigate({ to: '/change-password' })}>
+            Passwort ändern
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onLogout}>Abmelden</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+function AuthenticatedLayout() {
+  return (
+    <div className="flex min-h-screen">
+      <AppSidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <MobileMenu />
+        <main className="flex-1 p-4 md:p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
