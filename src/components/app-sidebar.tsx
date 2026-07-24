@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useLogout } from '@/api/generated/endpoints/authentication/authentication';
 import { useAuthStore } from '@/stores/auth-store';
+import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -25,6 +26,14 @@ const NAV_ITEMS = [
 ] as const;
 
 const ADMIN_ITEM = { to: '/admin/users', label: 'Benutzer', icon: Users } as const;
+
+// Admins verwalten Benutzer, haben aber keine eigenen Skills/Verfügbarkeit/Matches
+export function navItemsForRole(role?: string) {
+  if (role === 'ADMIN') {
+    return [...NAV_ITEMS.slice(0, 2), ADMIN_ITEM];
+  }
+  return [...NAV_ITEMS];
+}
 
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -53,10 +62,7 @@ export function AppSidebar() {
     });
   };
 
-  const items =
-    user?.role === 'ADMIN'
-      ? [...NAV_ITEMS.filter((i) => i.to !== '/availability'), ADMIN_ITEM]
-      : NAV_ITEMS;
+  const items = navItemsForRole(user?.role);
 
   return (
     <aside
@@ -71,13 +77,8 @@ export function AppSidebar() {
           collapsed ? 'justify-center' : 'justify-between px-4',
         )}
       >
-        <Link to="/" className="flex items-center gap-2 overflow-hidden">
-          <div className="size-2 shrink-0 rounded-full bg-primary" />
-          {!collapsed && (
-            <span className="truncate text-sm font-medium tracking-tight">
-              Skill Matcher
-            </span>
-          )}
+        <Link to="/" aria-label="Matchpoint — Dashboard">
+          <Logo iconOnly={collapsed} />
         </Link>
         {!collapsed && (
           <button

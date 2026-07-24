@@ -3,7 +3,8 @@ import { Menu } from 'lucide-react';
 import { rootRoute } from './__root';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLogout } from '@/api/generated/endpoints/authentication/authentication';
-import { AppSidebar } from '@/components/app-sidebar';
+import { AppSidebar, navItemsForRole } from '@/components/app-sidebar';
+import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,22 +29,14 @@ function MobileMenu() {
     });
   };
 
-  const items = [
-    { to: '/', label: 'Dashboard' },
-    { to: '/projects', label: 'Projekte' },
-    { to: '/matching', label: 'Matching' },
-    { to: '/skills', label: 'Skills' },
-    ...(user?.role === 'ADMIN'
-      ? [{ to: '/admin/users', label: 'Benutzer' }]
-      : [{ to: '/availability', label: 'Verfügbarkeit' }]),
-  ];
+  const items = navItemsForRole(user?.role).map(({ to, label }) => ({
+    to,
+    label,
+  }));
 
   return (
     <div className="flex h-14 items-center justify-between border-b bg-card px-4 md:hidden">
-      <div className="flex items-center gap-2">
-        <div className="size-2 rounded-full bg-primary" />
-        <span className="text-sm font-medium tracking-tight">Skill Matcher</span>
-      </div>
+      <Logo />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" aria-label="Menü öffnen">

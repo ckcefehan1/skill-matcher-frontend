@@ -9,6 +9,8 @@ import { InvitationAcceptPage } from '@/features/auth/invitation-accept-page';
 import { ChangePasswordPage } from '@/features/auth/change-password-page';
 import { AdminUsersPage } from '@/features/admin/admin-users-page';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
+import { ProjectsPage } from '@/features/projects/projects-page';
+import { ProjectDetailPage } from '@/features/projects/project-detail-page';
 import { useAuthStore } from '@/stores/auth-store';
 
 // public
@@ -43,33 +45,43 @@ const dashboardRoute = createRoute({
   component: DashboardPage,
 });
 
+const noAdmin = () => {
+  const { user } = useAuthStore.getState();
+  if (user?.role === 'ADMIN') {
+    throw redirect({ to: '/' });
+  }
+};
+
 const skillsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/skills',
+  beforeLoad: noAdmin,
   component: () => <div>Skills (TODO)</div>,
 });
 
 const availabilityRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/availability',
+  beforeLoad: noAdmin,
   component: () => <div>Availability (TODO)</div>,
 });
 
 const projectsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/projects',
-  component: () => <div>Projects (TODO)</div>,
+  component: ProjectsPage,
 });
 
 const projectDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/projects/$projectId',
-  component: () => <div>Project Detail (TODO)</div>,
+  component: ProjectDetailPage,
 });
 
 const matchingRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/matching',
+  beforeLoad: noAdmin,
   component: () => <div>Matching (TODO)</div>,
 });
 

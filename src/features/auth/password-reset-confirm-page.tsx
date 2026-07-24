@@ -47,7 +47,7 @@ export function PasswordResetConfirmPage() {
   if (!token) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/50 p-6">
-        <Card className="w-full max-w-sm shadow-md">
+        <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle className="text-xl tracking-tight">
               Ungültiger Link
@@ -77,7 +77,7 @@ export function PasswordResetConfirmPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 p-6">
-      <Card className="w-full max-w-sm shadow-md">
+      <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-xl tracking-tight">
             Neues Passwort setzen

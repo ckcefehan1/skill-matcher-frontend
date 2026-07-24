@@ -76,7 +76,7 @@ export function ChangePasswordPage() {
 
   return (
     <div className="flex items-center justify-center p-6">
-      <Card className="w-full max-w-sm shadow-md">
+      <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-xl tracking-tight">
             Passwort ändern
