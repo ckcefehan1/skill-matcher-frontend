@@ -4,6 +4,7 @@ import {
   ArrowRight,
   CalendarDays,
   FolderKanban,
+  Plus,
   Sparkles,
   Target,
   UserCheck,
@@ -27,6 +28,9 @@ import type {
 } from '@/api/generated/model';
 import { useAuthStore } from '@/stores/auth-store';
 import { InviteUserDialog, ROLE_LABELS } from '@/features/admin/invite-user-dialog';
+import { isUserEnabled, type AdminUser } from '@/features/admin/admin-user';
+import { formatDate, PROJECT_STATUS_LABELS, type Page } from '@/lib/utils';
+import { ProjectFormDialog } from '@/features/projects/project-form-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,22 +43,10 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// ponytail: orval typed these GETs as Blob/single — backend returns lists/pages. Regenerate orval with fixed spec to remove casts.
-interface Page<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-}
-
-function formatDate(iso?: string) {
-  return iso ? new Date(iso).toLocaleDateString('de-DE') : '—';
-}
-
 function scoreColor(score: number) {
-  if (score >= 80) return 'text-green-600';
-  if (score >= 50) return 'text-foreground';
-  return 'text-muted-foreground';
+  if (score >= 80) return 'text-score-high';
+  if (score >= 50) return 'text-score-mid';
+  return 'text-score-low';
 }
 
 const TONES = {
@@ -78,7 +70,7 @@ function StatCard({
   tone?: keyof typeof TONES;
 }) {
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card className="transition-colors hover:border-primary/40">
       <CardContent className="flex items-center gap-4 py-4">
         <div
           className={`flex size-10 items-center justify-center rounded-xl ${TONES[tone]}`}
@@ -102,15 +94,8 @@ function StatCard({
 
 // ---------- Admin ----------
 
-const PROJECT_STATUS_LABELS: Record<string, string> = {
-  PLANNED: 'Geplant',
-  ACTIVE: 'Aktiv',
-  PAUSED: 'Pausiert',
-  COMPLETED: 'Abgeschlossen',
-};
-
 function UserStatusBadge({ user }: { user: AdminUserListResponse }) {
-  if (user.enabled) {
+  if (isUserEnabled(user)) {
     return (
       <Badge variant="outline" className="border-green-500/30 bg-green-500/10 text-green-700">
         Aktiv
@@ -138,19 +123,19 @@ function AdminDashboard() {
   const usersQuery = useListUsers({ request: { params: { page: 0, size: 100 } } });
   const projectsQuery = useGetAllProjects({ request: { params: { page: 0, size: 100 } } });
   const skillsQuery = useGetAllSkills({ request: { params: { page: 0, size: 100 } } });
-  const matchesQuery = useFindProjectsForMe({ minScore: 0, limit: 5 });
 
-  const users = (usersQuery.data as unknown as Page<AdminUserListResponse> | undefined)
+  // ponytail: orval typed list GETs as Blob/single — backend returns lists/pages. Regenerate orval with fixed spec to remove casts.
+  const users = (usersQuery.data as unknown as Page<AdminUser> | undefined)
     ?.content;
   const projects = (
     projectsQuery.data as unknown as Page<ProjectDto> | undefined
   )?.content;
   const skills = (skillsQuery.data as unknown as Page<SkillDto> | undefined)
     ?.content;
-  const matches = matchesQuery.data as unknown as ProjectMatchDto[] | undefined;
 
-  const activeUsers = users?.filter((u) => u.enabled).length ?? 0;
-  const invitedUsers = users?.filter((u) => !u.enabled && !u.firstName).length ?? 0;
+  const activeUsers = users?.filter((u) => isUserEnabled(u)).length ?? 0;
+  const invitedUsers =
+    users?.filter((u) => !isUserEnabled(u) && !u.firstName).length ?? 0;
   const activeProjects = projects?.filter((p) => p.status === 'ACTIVE').length ?? 0;
 
   const recentUsers = [...(users ?? [])]
@@ -277,7 +262,7 @@ function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Skills</CardTitle>
@@ -307,39 +292,6 @@ function AdminDashboard() {
                 Noch keine Skills angelegt.
               </p>
             )}
-            <Link
-              to="/skills"
-              className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-            >
-              Alle Skills
-              <ArrowRight className="size-3" aria-hidden />
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Matching</CardTitle>
-            <CardDescription>Aktuell beste Skill-Projekt-Matches</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {matchesQuery.isLoading &&
-              Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full" />
-              ))}
-            {matches?.map((m) => <MatchCard key={m.projectId} match={m} />)}
-            {matches && matches.length === 0 && (
-              <p className="py-4 text-sm text-muted-foreground">
-                Keine Matches vorhanden.
-              </p>
-            )}
-            <Link
-              to="/matching"
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-            >
-              Zum Matching
-              <ArrowRight className="size-3" aria-hidden />
-            </Link>
           </CardContent>
         </Card>
       </div>
@@ -349,7 +301,235 @@ function AdminDashboard() {
   );
 }
 
-// ---------- Personal (EMPLOYER / PROJECTMANAGER) ----------
+// ---------- Shared (PM + Mitarbeiter) ----------
+
+function MySkillsCard({
+  skills,
+  loading,
+}: {
+  skills?: UserSkillDto[];
+  loading: boolean;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Deine Skills</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading && (
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-16" />
+            ))}
+          </div>
+        )}
+        {skills && skills.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {skills.map((s) => (
+              <Badge key={s.id} variant="secondary">
+                {s.name}
+                {s.level != null && (
+                  <span className="ml-1 text-xs opacity-70 tabular-nums">
+                    {s.level}/5
+                  </span>
+                )}
+              </Badge>
+            ))}
+          </div>
+        )}
+        {skills && skills.length === 0 && (
+          <Link
+            to="/skills"
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
+            Skills hinzufügen
+            <ArrowRight className="size-3" aria-hidden />
+          </Link>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function MyAvailabilityCard({
+  availability,
+  loading,
+}: {
+  availability?: UserAvailabilityDto[];
+  loading: boolean;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Verfügbarkeit</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {loading && <Skeleton className="h-10 w-full" />}
+        {availability?.slice(0, 3).map((a) => (
+          <div
+            key={a.id}
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+          >
+            <CalendarDays className="size-4 shrink-0" aria-hidden />
+            <span className="tabular-nums">
+              {formatDate(a.availableFrom)} – {formatDate(a.availableTo)}
+            </span>
+          </div>
+        ))}
+        {availability && availability.length === 0 && (
+          <Link
+            to="/availability"
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
+            Verfügbarkeit eintragen
+            <ArrowRight className="size-3" aria-hidden />
+          </Link>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------- Projektmanager ----------
+
+function PmDashboard() {
+  const user = useAuthStore((s) => s.user);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  // ponytail: no filtered endpoints — fetch first 100, filter client-side
+  const projectsQuery = useGetAllProjects({
+    request: { params: { page: 0, size: 100 } },
+  });
+  const skillsQuery = useGetMySkills();
+  const availabilityQuery = useGetAll();
+
+  const projects = (
+    projectsQuery.data as unknown as Page<ProjectDto> | undefined
+  )?.content;
+  const skills = skillsQuery.data as unknown as UserSkillDto[] | undefined;
+  const availability = availabilityQuery.data as unknown as
+    | UserAvailabilityDto[]
+    | undefined;
+
+  const owned = projects?.filter((p) => p.ownerId === user?.id);
+  const activeCount = owned?.filter((p) => p.status === 'ACTIVE').length ?? 0;
+  const plannedCount = owned?.filter((p) => p.status === 'PLANNED').length ?? 0;
+  const recentOwned = [...(owned ?? [])]
+    .sort((a, b) => (b.createdDate ?? '').localeCompare(a.createdDate ?? ''))
+    .slice(0, 6);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard
+          icon={FolderKanban}
+          label="Deine Projekte"
+          value={owned?.length ?? 0}
+          loading={projectsQuery.isLoading}
+        />
+        <StatCard
+          icon={Target}
+          label="Davon aktiv"
+          value={activeCount}
+          loading={projectsQuery.isLoading}
+          tone="blue"
+        />
+        <StatCard
+          icon={CalendarDays}
+          label="Geplant"
+          value={plannedCount}
+          loading={projectsQuery.isLoading}
+          tone="violet"
+        />
+        <StatCard
+          icon={Wrench}
+          label="Deine Skills"
+          value={skills?.length ?? 0}
+          loading={skillsQuery.isLoading}
+          tone="amber"
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Deine Projekte</CardTitle>
+              <CardDescription>
+                Projekte, deren Besitzer du bist
+              </CardDescription>
+            </div>
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" aria-hidden />
+              Neues Projekt
+            </Button>
+          </CardHeader>
+          <CardContent className="flex flex-col">
+            {projectsQuery.isLoading &&
+              Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="mb-3 h-9 w-full" />
+              ))}
+            {recentOwned.map((p) => (
+              <Link
+                key={p.id}
+                to="/projects/$projectId"
+                params={{ projectId: p.id ?? '' }}
+                className="flex items-center justify-between gap-3 border-b py-2.5 last:border-0 hover:bg-accent/50"
+              >
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-medium">{p.name}</span>
+                  <span className="truncate text-xs text-muted-foreground tabular-nums">
+                    {formatDate(p.startDate)} – {formatDate(p.endDate)} · max.{' '}
+                    {p.maxMembers}
+                  </span>
+                </div>
+                <Badge variant="outline" className="shrink-0">
+                  {PROJECT_STATUS_LABELS[p.status ?? ''] ?? p.status}
+                </Badge>
+              </Link>
+            ))}
+            {owned && owned.length === 0 && (
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Noch keine Projekte. Lege dein erstes Projekt an.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCreateOpen(true)}
+                >
+                  <Plus className="size-4" aria-hidden />
+                  Projekt anlegen
+                </Button>
+              </div>
+            )}
+            {owned && owned.length > 0 && (
+              <Link
+                to="/projects"
+                className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                Alle Projekte
+                <ArrowRight className="size-3" aria-hidden />
+              </Link>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="flex flex-col gap-6">
+          <MySkillsCard skills={skills} loading={skillsQuery.isLoading} />
+          <MyAvailabilityCard
+            availability={availability}
+            loading={availabilityQuery.isLoading}
+          />
+        </div>
+      </div>
+
+      <ProjectFormDialog open={createOpen} onOpenChange={setCreateOpen} />
+    </div>
+  );
+}
+
+// ---------- Personal (EMPLOYER) ----------
 
 function MatchCard({ match }: { match: ProjectMatchDto }) {
   const score = Math.round((match.score ?? 0) * 100);
@@ -357,7 +537,7 @@ function MatchCard({ match }: { match: ProjectMatchDto }) {
     <Link
       to="/projects/$projectId"
       params={{ projectId: match.projectId ?? '' }}
-      className="block rounded-xl border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-md"
+      className="block rounded-xl border bg-card p-4 transition-colors hover:border-primary/40"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
@@ -460,70 +640,11 @@ function PersonalDashboard() {
         </Card>
 
         <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Deine Skills</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {skillsQuery.isLoading && (
-                <div className="flex flex-wrap gap-1.5">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-6 w-16" />
-                  ))}
-                </div>
-              )}
-              {skills && skills.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {skills.map((s) => (
-                    <Badge key={s.id} variant="secondary">
-                      {s.name}
-                      {s.level != null && (
-                        <span className="ml-1 text-xs opacity-70">{s.level}/5</span>
-                      )}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              {skills && skills.length === 0 && (
-                <Link
-                  to="/skills"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                >
-                  Skills hinzufügen
-                  <ArrowRight className="size-3" aria-hidden />
-                </Link>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Verfügbarkeit</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {availabilityQuery.isLoading && <Skeleton className="h-10 w-full" />}
-              {availability?.slice(0, 3).map((a) => (
-                <div
-                  key={a.id}
-                  className="flex items-center gap-2 text-sm text-muted-foreground"
-                >
-                  <CalendarDays className="size-4 shrink-0" aria-hidden />
-                  <span>
-                    {formatDate(a.availableFrom)} – {formatDate(a.availableTo)}
-                  </span>
-                </div>
-              ))}
-              {availability && availability.length === 0 && (
-                <Link
-                  to="/availability"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                >
-                  Verfügbarkeit eintragen
-                  <ArrowRight className="size-3" aria-hidden />
-                </Link>
-              )}
-            </CardContent>
-          </Card>
+          <MySkillsCard skills={skills} loading={skillsQuery.isLoading} />
+          <MyAvailabilityCard
+            availability={availability}
+            loading={availabilityQuery.isLoading}
+          />
         </div>
       </div>
     </div>
@@ -547,7 +668,13 @@ export function DashboardPage() {
         </h1>
         <p className="text-sm text-muted-foreground">{today}</p>
       </div>
-      {user?.role === 'ADMIN' ? <AdminDashboard /> : <PersonalDashboard />}
+      {user?.role === 'ADMIN' ? (
+        <AdminDashboard />
+      ) : user?.role === 'PROJECTMANAGER' ? (
+        <PmDashboard />
+      ) : (
+        <PersonalDashboard />
+      )}
     </div>
   );
 }

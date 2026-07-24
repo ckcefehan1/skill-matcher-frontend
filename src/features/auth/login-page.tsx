@@ -6,6 +6,7 @@ import { useLogin } from '@/api/generated/endpoints/authentication/authenticatio
 import { PasswordInput } from './password-input';
 import { useAuthStore } from '@/stores/auth-store';
 import type { User } from '@/stores/auth-store';
+import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,9 +36,8 @@ function BrandPanel() {
           backgroundSize: '56px 56px',
         }}
       />
-      <div className="relative flex items-center gap-2 text-primary-foreground">
-        <div className="size-2 rounded-full bg-primary-foreground" />
-        <span className="text-sm font-medium tracking-tight">Skill Matcher</span>
+      <div className="relative">
+        <Logo className="[&_svg]:text-primary-foreground [&_span]:text-primary-foreground" />
       </div>
       <div className="relative flex flex-col gap-8">
         <p className="max-w-md text-3xl font-medium leading-tight tracking-tight text-primary-foreground lg:text-4xl">
@@ -149,11 +149,8 @@ export function LoginPage() {
           }}
         />
         <div className="relative flex items-center justify-between p-6 md:p-8">
-          <div className="flex items-center gap-2 md:hidden">
-            <div className="size-2 rounded-full bg-primary" />
-            <span className="text-sm font-medium tracking-tight">
-              Skill Matcher
-            </span>
+          <div className="md:hidden">
+            <Logo />
           </div>
           <span className="hidden md:block" />
           <a
@@ -165,7 +162,7 @@ export function LoginPage() {
         </div>
         <div className="relative flex flex-1 items-center justify-center p-6">
           <div className="flex w-full max-w-sm flex-col gap-6">
-            <Card className="shadow-md">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-xl tracking-tight">
                   Anmelden

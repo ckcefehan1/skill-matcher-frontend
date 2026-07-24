@@ -13,6 +13,7 @@ export interface ProjectDto {
   startDate?: string;
   endDate?: string;
   maxMembers?: number;
+  ownerId?: string;
   ownerName?: string;
   createdDate?: string;
 }
