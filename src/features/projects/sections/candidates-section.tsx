@@ -1,7 +1,8 @@
 import { Plus } from 'lucide-react';
-import type { ProjectMemberDto } from '@/api/generated/model';
+import type { ApplicationDto, ProjectMemberDto } from '@/api/generated/model';
+import { useListForProject } from '@/api/generated/endpoints/project-applications/project-applications';
 import { useProjectDetail } from '../use-project-detail';
-import { scoreColor } from '@/lib/utils';
+import { scoreColor, type Page } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +13,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// gleiche Params wie usePmApplications — gleiche QueryKey, Invalidate nach Accept greift hier auch
+const APPLICATIONS_PARAMS = { pageable: { page: 0, size: 50 } };
 
 export function CandidatesSection({
   projectId,
@@ -26,6 +30,18 @@ export function CandidatesSection({
 }) {
   const { candidates, isCandidatesLoading, addMemberMutation } =
     useProjectDetail(projectId, { isPM: true });
+
+  // addMember erfordert serverseitig eine ACCEPTED-Bewerbung — Liste nur für Owner nötig
+  const applicationsQuery = useListForProject(projectId, APPLICATIONS_PARAMS, {
+    query: { enabled: isOwner },
+  });
+  const acceptedUserIds = new Set(
+    (
+      applicationsQuery.data as unknown as Page<ApplicationDto> | undefined
+    )?.content
+      ?.filter((a) => a.status === 'ACCEPTED')
+      .map((a) => a.userId),
+  );
 
   const memberIds = new Set(members?.map((m) => m.userId));
   const full = (members?.length ?? 0) >= maxMembers;
@@ -82,7 +98,7 @@ export function CandidatesSection({
                   ))}
                 </div>
               </div>
-              {isOwner && (
+              {isOwner && acceptedUserIds.has(c.userId ?? '') && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -97,6 +113,11 @@ export function CandidatesSection({
                   <Plus className="size-4" aria-hidden />
                   {full ? 'Voll' : 'Hinzufügen'}
                 </Button>
+              )}
+              {isOwner && !acceptedUserIds.has(c.userId ?? '') && (
+                <Badge variant="outline" className="text-muted-foreground">
+                  {c.hasApplied ? 'Bewerbung offen' : 'Keine Bewerbung'}
+                </Badge>
               )}
             </div>
           );
