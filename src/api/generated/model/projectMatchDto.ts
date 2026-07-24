@@ -15,6 +15,12 @@ export interface ProjectMatchDto {
   status?: string;
   ownerName?: string;
   score?: number;
+  /** Match-Tier aus User-Sicht */
+  matchTier?: string;
+  /** Lernpotenzial: Anteil der Skills im ±1 Level-Bereich (0.0–1.0) */
+  growthPotential?: number;
+  /** Status der eigenen Bewerbung für dieses Projekt, oder null wenn nicht beworben */
+  applicationStatus?: string;
   breakdown?: MatchScoreBreakdown;
   matchedSkills?: MatchedSkillDto[];
   missingSkills?: MissingSkillDto[];

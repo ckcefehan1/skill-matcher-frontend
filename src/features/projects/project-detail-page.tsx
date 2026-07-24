@@ -31,9 +31,10 @@ import type {
   UserMatchDto,
 } from '@/api/generated/model';
 import { useAuthStore } from '@/stores/auth-store';
-import { formatDate, PROJECT_STATUS_LABELS } from '@/lib/utils';
+import { formatDate, PROJECT_STATUS_LABELS, cn } from '@/lib/utils';
 import { ProjectFormDialog } from './project-form-dialog';
 import { Badge } from '@/components/ui/badge';
+import { LevelDots } from '@/components/level-dots';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -93,7 +94,7 @@ function SkillsSection({
   const addMutation = useAddSkill();
   const deleteMutation = useDelete1();
   const [name, setName] = useState('');
-  const [level, setLevel] = useState('3');
+  const [level, setLevel] = useState(3);
   const [priority, setPriority] = useState('MUST_HAVE');
   const [error, setError] = useState<string | null>(null);
 
@@ -116,7 +117,7 @@ function SkillsSection({
         projectId,
         data: {
           name: name.trim(),
-          level: Number(level),
+          level,
           priority: priority as 'MUST_HAVE' | 'NICE_TO_HAVE',
         },
       },
@@ -147,11 +148,7 @@ function SkillsSection({
             {skills.map((s) => (
               <Badge key={s.id} variant="secondary" className="gap-1.5">
                 {s.name}
-                {s.level != null && (
-                  <span className="text-xs opacity-70 tabular-nums">
-                    {s.level}/5
-                  </span>
-                )}
+                {s.level != null && <LevelDots level={s.level} />}
                 <span className="text-xs opacity-70">
                   {PRIORITY_LABELS[s.priority ?? ''] ?? s.priority}
                 </span>
@@ -193,19 +190,29 @@ function SkillsSection({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label>Level</Label>
-                <Select value={level} onValueChange={setLevel}>
-                  <SelectTrigger className="w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5].map((l) => (
-                      <SelectItem key={l} value={String(l)}>
-                        {l}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label id="project-skill-level-label">Level</Label>
+                <div
+                  role="radiogroup"
+                  aria-labelledby="project-skill-level-label"
+                  className="flex h-9 items-center gap-1"
+                >
+                  {[1, 2, 3, 4, 5].map((l) => (
+                    <button
+                      key={l}
+                      type="button"
+                      role="radio"
+                      aria-checked={level === l}
+                      aria-label={`Level ${l}`}
+                      onClick={() => setLevel(l)}
+                      className={cn(
+                        'size-3 rounded-full transition-colors',
+                        l <= level
+                          ? 'bg-primary'
+                          : 'bg-muted-foreground/30 hover:bg-muted-foreground/50',
+                      )}
+                    />
+                  ))}
+                </div>
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Priorität</Label>

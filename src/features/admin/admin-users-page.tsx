@@ -102,9 +102,7 @@ export function AdminUsersPage() {
   const [sortAsc, setSortAsc] = useState(false);
 
   // ponytail: fetch first 100, filter/sort client-side — switch to server-side params when user count grows
-  const { data, isLoading } = useListUsers({
-    request: { params: { page: 0, size: 100 } },
-  });
+  const { data, isLoading } = useListUsers({ pageable: { page: 0, size: 100 } });
   const users = (data as unknown as Page<AdminUser> | undefined)?.content;
 
   const filtered = (users ?? [])

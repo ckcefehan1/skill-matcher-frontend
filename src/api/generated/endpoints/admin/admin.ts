@@ -24,10 +24,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  AdminUserListResponse,
+  AdminUserDto,
   CreateUserRequest,
-  CreateUserResponse,
   GlobalErrorCodeResponse,
+  ListUsersParams,
   UpdateUserRoleRequest,
   UpdateUserStatusRequest
 } from '../../model';
@@ -45,13 +45,14 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary List all users
  */
 export const listUsers = (
-    
+    params: ListUsersParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<AdminUserListResponse>(
-      {url: `/api/admin/users`, method: 'GET', signal
+      return customInstance<AdminUserDto>(
+      {url: `/api/admin/users`, method: 'GET',
+        params, signal
     },
       options);
     }
@@ -59,23 +60,23 @@ export const listUsers = (
 
 
 
-export const getListUsersQueryKey = () => {
+export const getListUsersQueryKey = (params?: ListUsersParams,) => {
     return [
-    `/api/admin/users`
+    `/api/admin/users`, ...(params ? [params] : [])
     ] as const;
     }
 
     
-export const getListUsersQueryOptions = <TData = Awaited<ReturnType<typeof listUsers>>, TError = ErrorType<GlobalErrorCodeResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getListUsersQueryOptions = <TData = Awaited<ReturnType<typeof listUsers>>, TError = ErrorType<GlobalErrorCodeResponse>>(params: ListUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListUsersQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListUsersQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUsers>>> = ({ signal }) => listUsers(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUsers>>> = ({ signal }) => listUsers(params, requestOptions, signal);
 
       
 
@@ -89,7 +90,7 @@ export type ListUsersQueryError = ErrorType<GlobalErrorCodeResponse>
 
 
 export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>> & Pick<
+ params: ListUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listUsers>>,
           TError,
@@ -99,7 +100,7 @@ export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TErr
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>> & Pick<
+ params: ListUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listUsers>>,
           TError,
@@ -109,7 +110,7 @@ export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TErr
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params: ListUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -117,11 +118,11 @@ export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TErr
  */
 
 export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params: ListUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListUsersQueryOptions(options)
+  const queryOptions = getListUsersQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -141,7 +142,7 @@ export const createUser = (
 ) => {
       
       
-      return customInstance<CreateUserResponse>(
+      return customInstance<AdminUserDto>(
       {url: `/api/admin/users`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createUserRequest, signal

@@ -9,6 +9,8 @@ import { InvitationAcceptPage } from '@/features/auth/invitation-accept-page';
 import { ChangePasswordPage } from '@/features/auth/change-password-page';
 import { AdminUsersPage } from '@/features/admin/admin-users-page';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
+import { SkillsPage } from '@/features/skills/skills-page';
+import { AdminSkillsPage } from '@/features/skills/admin-skills-page';
 import { ProjectsPage } from '@/features/projects/projects-page';
 import { ProjectDetailPage } from '@/features/projects/project-detail-page';
 import { useAuthStore } from '@/stores/auth-store';
@@ -56,7 +58,7 @@ const skillsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/skills',
   beforeLoad: noAdmin,
-  component: () => <div>Skills (TODO)</div>,
+  component: SkillsPage,
 });
 
 const availabilityRoute = createRoute({
@@ -85,16 +87,25 @@ const matchingRoute = createRoute({
   component: () => <div>Matching (TODO)</div>,
 });
 
+const adminOnly = () => {
+  const { user } = useAuthStore.getState();
+  if (user?.role !== 'ADMIN') {
+    throw redirect({ to: '/' });
+  }
+};
+
 const adminUsersRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/admin/users',
-  beforeLoad: () => {
-    const { user } = useAuthStore.getState();
-    if (user?.role !== 'ADMIN') {
-      throw redirect({ to: '/' });
-    }
-  },
+  beforeLoad: adminOnly,
   component: AdminUsersPage,
+});
+
+const adminSkillsRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: '/admin/skills',
+  beforeLoad: adminOnly,
+  component: AdminSkillsPage,
 });
 
 const changePasswordRoute = createRoute({
@@ -118,6 +129,7 @@ const routeTree = rootRoute.addChildren([
     projectDetailRoute,
     matchingRoute,
     adminUsersRoute,
+    adminSkillsRoute,
     changePasswordRoute,
   ]),
 ]);
