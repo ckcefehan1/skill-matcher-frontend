@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetAllSkillsParams,
   GlobalErrorCodeResponse
 } from '../../model';
 
@@ -36,13 +37,14 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary Get all skills
  */
 export const getAllSkills = (
-    
+    params: GetAllSkillsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<Blob>(
       {url: `/api/skills`, method: 'GET',
+        params,
         responseType: 'blob', signal
     },
       options);
@@ -51,23 +53,23 @@ export const getAllSkills = (
 
 
 
-export const getGetAllSkillsQueryKey = () => {
+export const getGetAllSkillsQueryKey = (params?: GetAllSkillsParams,) => {
     return [
-    `/api/skills`
+    `/api/skills`, ...(params ? [params] : [])
     ] as const;
     }
 
     
-export const getGetAllSkillsQueryOptions = <TData = Awaited<ReturnType<typeof getAllSkills>>, TError = ErrorType<GlobalErrorCodeResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getGetAllSkillsQueryOptions = <TData = Awaited<ReturnType<typeof getAllSkills>>, TError = ErrorType<GlobalErrorCodeResponse>>(params: GetAllSkillsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAllSkillsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetAllSkillsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllSkills>>> = ({ signal }) => getAllSkills(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllSkills>>> = ({ signal }) => getAllSkills(params, requestOptions, signal);
 
       
 
@@ -81,7 +83,7 @@ export type GetAllSkillsQueryError = ErrorType<GlobalErrorCodeResponse>
 
 
 export function useGetAllSkills<TData = Awaited<ReturnType<typeof getAllSkills>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>> & Pick<
+ params: GetAllSkillsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAllSkills>>,
           TError,
@@ -91,7 +93,7 @@ export function useGetAllSkills<TData = Awaited<ReturnType<typeof getAllSkills>>
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAllSkills<TData = Awaited<ReturnType<typeof getAllSkills>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>> & Pick<
+ params: GetAllSkillsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAllSkills>>,
           TError,
@@ -101,7 +103,7 @@ export function useGetAllSkills<TData = Awaited<ReturnType<typeof getAllSkills>>
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAllSkills<TData = Awaited<ReturnType<typeof getAllSkills>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params: GetAllSkillsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -109,11 +111,11 @@ export function useGetAllSkills<TData = Awaited<ReturnType<typeof getAllSkills>>
  */
 
 export function useGetAllSkills<TData = Awaited<ReturnType<typeof getAllSkills>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params: GetAllSkillsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllSkills>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetAllSkillsQueryOptions(options)
+  const queryOptions = getGetAllSkillsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -26,11 +26,12 @@ const NAV_ITEMS = [
 ] as const;
 
 const ADMIN_ITEM = { to: '/admin/users', label: 'Benutzer', icon: Users } as const;
+const ADMIN_SKILLS_ITEM = { to: '/admin/skills', label: 'Skills', icon: Wrench } as const;
 
-// Admins verwalten Benutzer, haben aber keine eigenen Skills/Verfügbarkeit/Matches
+// Admins verwalten Benutzer und Skill-Relationen, haben aber keine eigenen Skills/Verfügbarkeit/Matches
 export function navItemsForRole(role?: string) {
   if (role === 'ADMIN') {
-    return [...NAV_ITEMS.slice(0, 2), ADMIN_ITEM];
+    return [...NAV_ITEMS.slice(0, 2), ADMIN_SKILLS_ITEM, ADMIN_ITEM];
   }
   return [...NAV_ITEMS];
 }

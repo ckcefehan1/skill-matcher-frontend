@@ -26,9 +26,7 @@ export function ProjectsPage() {
   const [filter, setFilter] = useState('ALL');
 
   // ponytail: no filtered count endpoint — fetch first 100, filter client-side
-  const projectsQuery = useGetAllProjects({
-    request: { params: { page: 0, size: 100 } },
-  });
+  const projectsQuery = useGetAllProjects({ pageable: { page: 0, size: 100 } });
   const projects = (
     projectsQuery.data as unknown as Page<ProjectDto> | undefined
   )?.content;

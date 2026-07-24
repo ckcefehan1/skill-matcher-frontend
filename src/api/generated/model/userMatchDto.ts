@@ -13,6 +13,14 @@ export interface UserMatchDto {
   userName?: string;
   email?: string;
   score?: number;
+  /** Match-Tier: EXACT (100% Must-have), FALLBACK (≥ Threshold), STRETCH (< Threshold) */
+  matchTier?: string;
+  /** Anzahl aktiver Projekte des Users */
+  capacityLoad?: number;
+  /** Maximale parallele Projekte des Users */
+  capacityMax?: number;
+  /** Ob der User eine aktive (PENDING) Bewerbung für dieses Projekt hat */
+  hasApplied?: boolean;
   breakdown?: MatchScoreBreakdown;
   matchedSkills?: MatchedSkillDto[];
   missingSkills?: MissingSkillDto[];

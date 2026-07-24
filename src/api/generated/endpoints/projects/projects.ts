@@ -25,6 +25,7 @@ import type {
 
 import type {
   CreateProjectRequest,
+  GetAllProjectsParams,
   GlobalErrorCodeResponse,
   ProjectDto,
   UpdateProjectRequest
@@ -261,13 +262,14 @@ export const useDeleteProject = <TError = ErrorType<GlobalErrorCodeResponse>,
  * @summary Get all projects
  */
 export const getAllProjects = (
-    
+    params: GetAllProjectsParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<Blob>(
       {url: `/api/projects`, method: 'GET',
+        params,
         responseType: 'blob', signal
     },
       options);
@@ -276,23 +278,23 @@ export const getAllProjects = (
 
 
 
-export const getGetAllProjectsQueryKey = () => {
+export const getGetAllProjectsQueryKey = (params?: GetAllProjectsParams,) => {
     return [
-    `/api/projects`
+    `/api/projects`, ...(params ? [params] : [])
     ] as const;
     }
 
     
-export const getGetAllProjectsQueryOptions = <TData = Awaited<ReturnType<typeof getAllProjects>>, TError = ErrorType<GlobalErrorCodeResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const getGetAllProjectsQueryOptions = <TData = Awaited<ReturnType<typeof getAllProjects>>, TError = ErrorType<GlobalErrorCodeResponse>>(params: GetAllProjectsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAllProjectsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetAllProjectsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllProjects>>> = ({ signal }) => getAllProjects(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllProjects>>> = ({ signal }) => getAllProjects(params, requestOptions, signal);
 
       
 
@@ -306,7 +308,7 @@ export type GetAllProjectsQueryError = ErrorType<GlobalErrorCodeResponse>
 
 
 export function useGetAllProjects<TData = Awaited<ReturnType<typeof getAllProjects>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>> & Pick<
+ params: GetAllProjectsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAllProjects>>,
           TError,
@@ -316,7 +318,7 @@ export function useGetAllProjects<TData = Awaited<ReturnType<typeof getAllProjec
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAllProjects<TData = Awaited<ReturnType<typeof getAllProjects>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>> & Pick<
+ params: GetAllProjectsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAllProjects>>,
           TError,
@@ -326,7 +328,7 @@ export function useGetAllProjects<TData = Awaited<ReturnType<typeof getAllProjec
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAllProjects<TData = Awaited<ReturnType<typeof getAllProjects>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params: GetAllProjectsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -334,11 +336,11 @@ export function useGetAllProjects<TData = Awaited<ReturnType<typeof getAllProjec
  */
 
 export function useGetAllProjects<TData = Awaited<ReturnType<typeof getAllProjects>>, TError = ErrorType<GlobalErrorCodeResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ params: GetAllProjectsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProjects>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetAllProjectsQueryOptions(options)
+  const queryOptions = getGetAllProjectsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

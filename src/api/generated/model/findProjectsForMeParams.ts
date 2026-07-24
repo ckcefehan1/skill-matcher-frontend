@@ -4,6 +4,7 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type { FindProjectsForMeTier } from './findProjectsForMeTier';
 
 export type FindProjectsForMeParams = {
 /**
@@ -15,4 +16,5 @@ minScore?: number;
  * @minimum 1
  */
 limit?: number;
+tier?: FindProjectsForMeTier;
 };

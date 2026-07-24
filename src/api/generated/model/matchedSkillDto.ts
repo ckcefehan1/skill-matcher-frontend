@@ -11,4 +11,6 @@ export interface MatchedSkillDto {
   userLevel?: number;
   requiredLevel?: number;
   priority?: string;
+  /** Name of the related skill used for this match, or null for a direct skill match */
+  matchedVia?: string;
 }

@@ -32,6 +32,7 @@ import { isUserEnabled, type AdminUser } from '@/features/admin/admin-user';
 import { formatDate, PROJECT_STATUS_LABELS, type Page } from '@/lib/utils';
 import { ProjectFormDialog } from '@/features/projects/project-form-dialog';
 import { Badge } from '@/components/ui/badge';
+import { LevelDots } from '@/components/level-dots';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -120,9 +121,9 @@ function AdminDashboard() {
   const [inviteOpen, setInviteOpen] = useState(false);
 
   // ponytail: no filtered count endpoints — fetch first 100 and aggregate client-side
-  const usersQuery = useListUsers({ request: { params: { page: 0, size: 100 } } });
-  const projectsQuery = useGetAllProjects({ request: { params: { page: 0, size: 100 } } });
-  const skillsQuery = useGetAllSkills({ request: { params: { page: 0, size: 100 } } });
+  const usersQuery = useListUsers({ pageable: { page: 0, size: 100 } });
+  const projectsQuery = useGetAllProjects({ pageable: { page: 0, size: 100 } });
+  const skillsQuery = useGetAllSkills({ pageable: { page: 0, size: 100 } });
 
   // ponytail: orval typed list GETs as Blob/single — backend returns lists/pages. Regenerate orval with fixed spec to remove casts.
   const users = (usersQuery.data as unknown as Page<AdminUser> | undefined)
@@ -326,13 +327,9 @@ function MySkillsCard({
         {skills && skills.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {skills.map((s) => (
-              <Badge key={s.id} variant="secondary">
+              <Badge key={s.id} variant="secondary" className="gap-1.5">
                 {s.name}
-                {s.level != null && (
-                  <span className="ml-1 text-xs opacity-70 tabular-nums">
-                    {s.level}/5
-                  </span>
-                )}
+                {s.level != null && <LevelDots level={s.level} />}
               </Badge>
             ))}
           </div>
@@ -397,9 +394,7 @@ function PmDashboard() {
   const [createOpen, setCreateOpen] = useState(false);
 
   // ponytail: no filtered endpoints — fetch first 100, filter client-side
-  const projectsQuery = useGetAllProjects({
-    request: { params: { page: 0, size: 100 } },
-  });
+  const projectsQuery = useGetAllProjects({ pageable: { page: 0, size: 100 } });
   const skillsQuery = useGetMySkills();
   const availabilityQuery = useGetAll();
 

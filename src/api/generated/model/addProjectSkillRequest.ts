@@ -4,7 +4,6 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type { AddProjectSkillRequestPriority } from './addProjectSkillRequestPriority';
 
 export interface AddProjectSkillRequest {
   /** @minLength 1 */
@@ -15,5 +14,5 @@ export interface AddProjectSkillRequest {
    */
   level?: number;
   /** @pattern (?i)MUST_HAVE|NICE_TO_HAVE */
-  priority?: AddProjectSkillRequestPriority;
+  priority?: string;
 }
