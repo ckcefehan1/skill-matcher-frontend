@@ -13,6 +13,7 @@ import { SkillsPage } from '@/features/skills/skills-page';
 import { AdminSkillsPage } from '@/features/skills/admin-skills-page';
 import { ProjectsPage } from '@/features/projects/projects-page';
 import { ProjectDetailPage } from '@/features/projects/project-detail-page';
+import { MatchingPage } from '@/features/matching/matching-page';
 import { useAuthStore } from '@/stores/auth-store';
 
 // public
@@ -84,7 +85,7 @@ const matchingRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/matching',
   beforeLoad: noAdmin,
-  component: () => <div>Matching (TODO)</div>,
+  component: MatchingPage,
 });
 
 const adminOnly = () => {
