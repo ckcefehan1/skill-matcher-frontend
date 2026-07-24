@@ -5,3 +5,9 @@ export type AdminUser = AdminUserListResponse & { isEnabled?: boolean };
 
 export const isUserEnabled = (u: AdminUser): boolean =>
   u.isEnabled ?? u.enabled ?? false;
+
+export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Admin',
+  PROJECTMANAGER: 'Projektmanager',
+  EMPLOYER: 'Mitarbeiter',
+};

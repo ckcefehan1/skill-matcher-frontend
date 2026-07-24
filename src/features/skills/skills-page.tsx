@@ -1,14 +1,7 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Plus, X } from 'lucide-react';
-import {
-  getGetMySkillsQueryKey,
-  useAddSkill1,
-  useDelete2,
-  useGetMySkills,
-} from '@/api/generated/endpoints/my-skills/my-skills';
-import { useGetAllSkills } from '@/api/generated/endpoints/skills/skills';
-import type { SkillDto, UserSkillDto } from '@/api/generated/model';
+import { useMySkills } from './use-my-skills';
+import { useSkillCatalog } from './use-skill-catalog';
 import { Badge } from '@/components/ui/badge';
 import { LevelDots } from '@/components/level-dots';
 import { Button } from '@/components/ui/button';
@@ -22,26 +15,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn, type Page } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export function SkillsPage() {
-  const queryClient = useQueryClient();
-  const skillsQuery = useGetMySkills();
-  const catalogQuery = useGetAllSkills({ pageable: { page: 0, size: 100 } });
-  const addMutation = useAddSkill1();
-  const deleteMutation = useDelete2();
+  const { skills, isLoading, addMutation, deleteMutation } = useMySkills();
+  const { skills: catalog } = useSkillCatalog();
 
   const [name, setName] = useState('');
   const [level, setLevel] = useState(3);
   const [error, setError] = useState<string | null>(null);
-
-  const skills = skillsQuery.data as unknown as UserSkillDto[] | undefined;
-  const catalog = (
-    catalogQuery.data as unknown as Page<SkillDto> | undefined
-  )?.content;
-
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: getGetMySkillsQueryKey() });
 
   const onAdd = () => {
     if (!name.trim()) return;
@@ -49,10 +31,7 @@ export function SkillsPage() {
     addMutation.mutate(
       { data: { name: name.trim(), level } },
       {
-        onSuccess: () => {
-          setName('');
-          invalidate();
-        },
+        onSuccess: () => setName(''),
         onError: () => setError('Skill konnte nicht gespeichert werden.'),
       },
     );
@@ -76,7 +55,7 @@ export function SkillsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {skillsQuery.isLoading && <Skeleton className="h-8 w-full" />}
+          {isLoading && <Skeleton className="h-8 w-full" />}
           {skills && skills.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {skills.map((s) => (
@@ -87,12 +66,7 @@ export function SkillsPage() {
                     type="button"
                     aria-label={`${s.name} entfernen`}
                     className="ml-0.5 rounded-full opacity-60 hover:opacity-100"
-                    onClick={() =>
-                      deleteMutation.mutate(
-                        { id: s.id ?? '' },
-                        { onSuccess: invalidate },
-                      )
-                    }
+                    onClick={() => deleteMutation.mutate({ id: s.id ?? '' })}
                   >
                     <X className="size-3" aria-hidden />
                   </button>

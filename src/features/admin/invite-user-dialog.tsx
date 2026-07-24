@@ -7,6 +7,7 @@ import {
   useCreateUser,
 } from '@/api/generated/endpoints/admin/admin';
 import { Button } from '@/components/ui/button';
+import { ROLE_LABELS } from './admin-user';
 import {
   Dialog,
   DialogContent,
@@ -24,12 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-export const ROLE_LABELS: Record<string, string> = {
-  ADMIN: 'Admin',
-  PROJECTMANAGER: 'Projektmanager',
-  EMPLOYER: 'Mitarbeiter',
-};
 
 const schema = z.object({
   email: z.email('Ungültige E-Mail-Adresse'),
