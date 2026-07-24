@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDown,
   ArrowUp,
@@ -7,18 +6,11 @@ import {
   MoreHorizontal,
   UserPlus,
 } from 'lucide-react';
-import {
-  getListUsersQueryKey,
-  useListUsers,
-  useResendInvitation,
-  useUpdateUserRole,
-  useUpdateUserStatus,
-} from '@/api/generated/endpoints/admin/admin';
-import type { AdminUserListResponse } from '@/api/generated/model';
 import { useAuthStore } from '@/stores/auth-store';
-import { isUserEnabled, type AdminUser } from './admin-user';
-import { InviteUserDialog, ROLE_LABELS } from './invite-user-dialog';
-import { Badge } from '@/components/ui/badge';
+import { isUserEnabled, ROLE_LABELS, type AdminUser } from './admin-user';
+import { useAdminUsers } from './use-admin-users';
+import { InviteUserDialog } from './invite-user-dialog';
+import { UserStatusBadge } from './user-status-badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -45,36 +37,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-// ponytail: orval typed listUsers as single object, backend returns Page — regenerate orval with fixed spec to remove this cast
-interface Page<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-}
-
-function StatusBadge({ user }: { user: AdminUserListResponse }) {
-  if (isUserEnabled(user)) {
-    return (
-      <Badge variant="outline" className="border-green-500/30 bg-green-500/10 text-green-700">
-        Aktiv
-      </Badge>
-    );
-  }
-  if (!user.firstName) {
-    return (
-      <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700">
-        Eingeladen
-      </Badge>
-    );
-  }
-  return (
-    <Badge variant="outline" className="border-red-500/30 bg-red-500/10 text-red-700">
-      Deaktiviert
-    </Badge>
-  );
-}
-
 type UserStatus = 'aktiv' | 'eingeladen' | 'deaktiviert';
 
 function statusOf(user: AdminUser): UserStatus {
@@ -92,18 +54,16 @@ const STATUS_LABELS: Record<UserStatus, string> = {
 };
 
 export function AdminUsersPage() {
-  const queryClient = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
+  const { users, isLoading, roleMutation, statusMutation, resendMutation } =
+    useAdminUsers();
+
   const [inviteOpen, setInviteOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [sortKey, setSortKey] = useState<SortKey>('createdDate');
   const [sortAsc, setSortAsc] = useState(false);
-
-  // ponytail: fetch first 100, filter/sort client-side — switch to server-side params when user count grows
-  const { data, isLoading } = useListUsers({ pageable: { page: 0, size: 100 } });
-  const users = (data as unknown as Page<AdminUser> | undefined)?.content;
 
   const filtered = (users ?? [])
     .filter((u) => {
@@ -140,13 +100,6 @@ export function AdminUsersPage() {
     }
   };
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
-
-  const roleMutation = useUpdateUserRole({ mutation: { onSuccess: invalidate } });
-  const statusMutation = useUpdateUserStatus({ mutation: { onSuccess: invalidate } });
-  const resendMutation = useResendInvitation();
-
   const renderSortHead = (label: string, k: SortKey) => (
     <button
       onClick={() => toggleSort(k)}
@@ -171,7 +124,7 @@ export function AdminUsersPage() {
         <div>
           <h1 className="text-2xl font-medium tracking-tight">Benutzer</h1>
           <p className="text-sm text-muted-foreground">
-            {users ? `${filtered.length} von ${users.length} Benutzern` : ' '}
+            {users ? `${filtered.length} von ${users.length} Benutzern` : ' '}
           </p>
         </div>
         <Button onClick={() => setInviteOpen(true)}>
@@ -285,7 +238,7 @@ export function AdminUsersPage() {
                         }
                         aria-label="Aktiv-Status"
                       />
-                      <StatusBadge user={u} />
+                      <UserStatusBadge user={u} />
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
