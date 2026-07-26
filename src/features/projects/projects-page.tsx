@@ -5,11 +5,13 @@ import { useGetAllProjects } from '@/api/generated/endpoints/projects/projects';
 import type { ProjectDto } from '@/api/generated/model';
 import { useAuthStore } from '@/stores/auth-store';
 import { ProjectFormDialog } from './project-form-dialog';
+import { QueryError } from '@/components/query-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDate, PROJECT_STATUS_LABELS, type Page } from '@/lib/utils';
+import { usePageTitle } from '@/lib/use-page-title';
 
 const FILTERS = [
   { value: 'ALL', label: 'Alle' },
@@ -20,6 +22,7 @@ const FILTERS = [
 ];
 
 export function ProjectsPage() {
+  usePageTitle('Projekte');
   const user = useAuthStore((s) => s.user);
   const isPM = user?.role === 'PROJECTMANAGER';
   const [createOpen, setCreateOpen] = useState(false);
@@ -69,6 +72,9 @@ export function ProjectsPage() {
           Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-28 w-full" />
           ))}
+        {projectsQuery.isError && (
+          <QueryError onRetry={() => projectsQuery.refetch()} />
+        )}
         {filtered?.map((p) => (
           <Link
             key={p.id}

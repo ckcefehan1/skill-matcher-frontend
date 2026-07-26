@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   getGetAllProjectsQueryKey,
   getGetProjectQueryKey,
@@ -65,19 +66,49 @@ export function useProjectDetail(projectId: string, { isPM }: { isPM: boolean })
   };
 
   const addSkillMutation = useAddSkill({
-    mutation: { onSuccess: invalidateSkillsAndCandidates },
+    mutation: {
+      onSuccess: () => {
+        invalidateSkillsAndCandidates();
+        toast.success('Skill hinzugefügt');
+      },
+      onError: () => toast.error('Skill konnte nicht hinzugefügt werden'),
+    },
   });
   const deleteSkillMutation = useDelete1({
-    mutation: { onSuccess: invalidateSkillsAndCandidates },
+    mutation: {
+      onSuccess: () => {
+        invalidateSkillsAndCandidates();
+        toast.success('Skill entfernt');
+      },
+      onError: () => toast.error('Skill konnte nicht entfernt werden'),
+    },
   });
   const addMemberMutation = useAddMember({
-    mutation: { onSuccess: invalidateMembersAndCandidates },
+    mutation: {
+      onSuccess: () => {
+        invalidateMembersAndCandidates();
+        toast.success('Mitglied hinzugefügt');
+      },
+      onError: () => toast.error('Mitglied konnte nicht hinzugefügt werden'),
+    },
   });
   const removeMemberMutation = useRemoveMember({
-    mutation: { onSuccess: invalidateMembers },
+    mutation: {
+      onSuccess: () => {
+        invalidateMembers();
+        toast.success('Mitglied entfernt');
+      },
+      onError: () => toast.error('Mitglied konnte nicht entfernt werden'),
+    },
   });
   const leaveProjectMutation = useLeaveProject({
-    mutation: { onSuccess: invalidateMembers },
+    mutation: {
+      onSuccess: () => {
+        invalidateMembers();
+        toast.success('Projekt verlassen');
+      },
+      onError: () => toast.error('Projekt konnte nicht verlassen werden'),
+    },
   });
   const deleteProjectMutation = useDeleteProject({
     mutation: {

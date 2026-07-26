@@ -5,14 +5,14 @@
  * OpenAPI spec version: v0
  */
 import type { PageableObject } from './pageableObject';
-import type { SkillDto } from './skillDto';
 import type { SortObject } from './sortObject';
+import type { UserSearchResultDto } from './userSearchResultDto';
 
-export interface PageSkillDto {
+export interface PageUserSearchResultDto {
   totalElements?: number;
   totalPages?: number;
   size?: number;
-  content?: SkillDto[];
+  content?: UserSearchResultDto[];
   number?: number;
   first?: boolean;
   last?: boolean;

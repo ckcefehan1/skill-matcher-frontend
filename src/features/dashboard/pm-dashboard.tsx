@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, CalendarDays, FolderKanban, Plus, Target, Wrench } from 'lucide-react';
 import { usePmDashboardData } from './use-dashboard-data';
+import { QueryError } from '@/components/query-error';
 import { StatCard } from './components/stat-card';
 import { MySkillsCard } from './components/my-skills-card';
 import { MyAvailabilityCard } from './components/my-availability-card';
@@ -25,6 +26,8 @@ export function PmDashboard() {
   const {
     projects,
     projectsLoading,
+    isProjectsError,
+    refetchProjects,
     skills,
     skillsLoading,
     availability,
@@ -89,6 +92,9 @@ export function PmDashboard() {
               Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="mb-3 h-9 w-full" />
               ))}
+            {isProjectsError && (
+              <QueryError onRetry={() => refetchProjects()} />
+            )}
             {recentOwned.map((p) => (
               <Link
                 key={p.id}

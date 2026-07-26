@@ -17,7 +17,7 @@ export function PasswordRequirements({ password }: { password: string }) {
           <li
             key={label}
             className={`flex items-center gap-2 text-xs ${
-              ok ? 'text-green-600' : 'text-muted-foreground'
+              ok ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
             {ok ? (

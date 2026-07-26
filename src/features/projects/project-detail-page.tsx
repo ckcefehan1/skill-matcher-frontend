@@ -7,6 +7,7 @@ import { MembersSection } from './sections/members-section';
 import { CandidatesSection } from './sections/candidates-section';
 import { useAuthStore } from '@/stores/auth-store';
 import { formatDate, PROJECT_STATUS_LABELS } from '@/lib/utils';
+import { usePageTitle } from '@/lib/use-page-title';
 import { ProjectFormDialog } from './project-form-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ export function ProjectDetailPage() {
 
   const { project, isProjectLoading, members, deleteProjectMutation } =
     useProjectDetail(projectId, { isPM });
+  usePageTitle(project?.name ?? 'Projekt');
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);

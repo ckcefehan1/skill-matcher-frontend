@@ -7,14 +7,12 @@ import { useAuthStore } from '@/stores/auth-store';
 import { passwordSchema } from './password-schema';
 import { PasswordRequirements } from './password-requirements';
 import { PasswordInput } from './password-input';
+import { usePageTitle } from '@/lib/use-page-title';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 
 const schema = z
@@ -31,6 +29,7 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 export function ChangePasswordPage() {
+  usePageTitle('Passwort ändern');
   const navigate = useNavigate();
   const storeLogout = useAuthStore((s) => s.logout);
   const mutation = useChangePassword();
@@ -75,17 +74,17 @@ export function ChangePasswordPage() {
   };
 
   return (
-    <div className="flex items-center justify-center p-6">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl tracking-tight">
-            Passwort ändern
-          </CardTitle>
-          <CardDescription>
-            Nach der Änderung wirst du automatisch abgemeldet.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-medium tracking-tight">
+          Passwort ändern
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Nach der Änderung wirst du automatisch abgemeldet.
+        </p>
+      </div>
+      <Card>
+        <CardContent className="pt-6">
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="flex flex-col gap-4"

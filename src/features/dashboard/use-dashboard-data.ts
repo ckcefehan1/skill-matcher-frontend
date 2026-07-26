@@ -28,6 +28,12 @@ export function useAdminDashboardData() {
     usersLoading: usersQuery.isLoading,
     projectsLoading: projectsQuery.isLoading,
     skillsLoading: skillsQuery.isLoading,
+    isError: usersQuery.isError || projectsQuery.isError || skillsQuery.isError,
+    refetch: () => {
+      usersQuery.refetch();
+      projectsQuery.refetch();
+      skillsQuery.refetch();
+    },
   };
 }
 
@@ -45,6 +51,8 @@ export function usePmDashboardData() {
       | UserAvailabilityDto[]
       | undefined,
     availabilityLoading: availabilityQuery.isLoading,
+    isProjectsError: projectsQuery.isError,
+    refetchProjects: projectsQuery.refetch,
   };
 }
 
@@ -62,5 +70,7 @@ export function usePersonalDashboardData() {
       | UserAvailabilityDto[]
       | undefined,
     availabilityLoading: availabilityQuery.isLoading,
+    isMatchesError: matchesQuery.isError,
+    refetchMatches: matchesQuery.refetch,
   };
 }

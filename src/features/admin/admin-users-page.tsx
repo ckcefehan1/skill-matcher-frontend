@@ -10,6 +10,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { isUserEnabled, ROLE_LABELS, type AdminUser } from './admin-user';
 import { useAdminUsers } from './use-admin-users';
 import { InviteUserDialog } from './invite-user-dialog';
+import { QueryError } from '@/components/query-error';
+import { usePageTitle } from '@/lib/use-page-title';
 import { UserStatusBadge } from './user-status-badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,8 +56,9 @@ const STATUS_LABELS: Record<UserStatus, string> = {
 };
 
 export function AdminUsersPage() {
+  usePageTitle('Benutzer');
   const currentUser = useAuthStore((s) => s.user);
-  const { users, isLoading, roleMutation, statusMutation, resendMutation } =
+  const { users, isLoading, isError, refetch, roleMutation, statusMutation, resendMutation } =
     useAdminUsers();
 
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -168,7 +171,10 @@ export function AdminUsersPage() {
         </Select>
       </div>
 
-      <div className="rounded-xl border bg-card">
+      <div className="rounded-lg border bg-card">
+        {isError ? (
+          <QueryError onRetry={() => refetch()} />
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -241,7 +247,7 @@ export function AdminUsersPage() {
                       <UserStatusBadge user={u} />
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-muted-foreground tabular-nums">
                     {u.createdDate
                       ? new Date(u.createdDate).toLocaleDateString('de-DE')
                       : '—'}
@@ -289,6 +295,7 @@ export function AdminUsersPage() {
             )}
           </TableBody>
         </Table>
+        )}
       </div>
 
       <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />

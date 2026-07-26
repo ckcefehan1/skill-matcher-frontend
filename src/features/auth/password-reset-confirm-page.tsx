@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useResetPassword } from '@/api/generated/endpoints/password-reset/password-reset';
+import { AuthShell } from './auth-shell';
 import { passwordSchema } from './password-schema';
 import { PasswordRequirements } from './password-requirements';
 import { PasswordInput } from './password-input';
@@ -46,8 +47,8 @@ export function PasswordResetConfirmPage() {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/50 p-6">
-        <Card className="w-full max-w-sm">
+      <AuthShell>
+        <Card>
           <CardHeader>
             <CardTitle className="text-xl tracking-tight">
               Ungültiger Link
@@ -62,7 +63,7 @@ export function PasswordResetConfirmPage() {
             </Link>
           </CardContent>
         </Card>
-      </div>
+      </AuthShell>
     );
   }
 
@@ -76,8 +77,8 @@ export function PasswordResetConfirmPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 p-6">
-      <Card className="w-full max-w-sm">
+    <AuthShell>
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl tracking-tight">
             Neues Passwort setzen
@@ -136,6 +137,6 @@ export function PasswordResetConfirmPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

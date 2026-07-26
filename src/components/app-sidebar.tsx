@@ -18,7 +18,7 @@ import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/', label: 'Übersicht', icon: LayoutDashboard },
   { to: '/projects', label: 'Projekte', icon: FolderKanban },
   { to: '/matching', label: 'Matching', icon: Sparkles },
   { to: '/skills', label: 'Skills', icon: Wrench },

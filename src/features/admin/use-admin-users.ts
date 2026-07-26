@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   getListUsersQueryKey,
   useListUsers,
@@ -20,15 +21,36 @@ export function useAdminUsers() {
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
 
-  const roleMutation = useUpdateUserRole({ mutation: { onSuccess: invalidate } });
-  const statusMutation = useUpdateUserStatus({
-    mutation: { onSuccess: invalidate },
+  const roleMutation = useUpdateUserRole({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Rolle aktualisiert');
+      },
+      onError: () => toast.error('Rolle konnte nicht geändert werden'),
+    },
   });
-  const resendMutation = useResendInvitation();
+  const statusMutation = useUpdateUserStatus({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Status aktualisiert');
+      },
+      onError: () => toast.error('Status konnte nicht geändert werden'),
+    },
+  });
+  const resendMutation = useResendInvitation({
+    mutation: {
+      onSuccess: () => toast.success('Einladung erneut versendet'),
+      onError: () => toast.error('Einladung konnte nicht versendet werden'),
+    },
+  });
 
   return {
     users,
     isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
     roleMutation,
     statusMutation,
     resendMutation,

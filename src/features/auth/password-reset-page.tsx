@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link } from '@tanstack/react-router';
 import { useRequestPasswordReset } from '@/api/generated/endpoints/password-reset/password-reset';
+import { AuthShell } from './auth-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,8 +37,8 @@ export function PasswordResetPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 p-6">
-      <Card className="w-full max-w-sm">
+    <AuthShell>
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl tracking-tight">
             Passwort zurücksetzen
@@ -99,6 +100,6 @@ export function PasswordResetPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

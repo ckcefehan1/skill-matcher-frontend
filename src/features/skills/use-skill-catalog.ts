@@ -8,5 +8,10 @@ export function useSkillCatalog() {
   // ponytail: orval typed list GETs as Blob — backend returns Page. Regenerate orval with fixed spec to remove cast.
   const skills = (query.data as unknown as Page<SkillDto> | undefined)?.content;
 
-  return { skills, isLoading: query.isLoading };
+  return {
+    skills,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  };
 }

@@ -1,7 +1,10 @@
-import { Plus } from 'lucide-react';
-import type { ProjectMemberDto } from '@/api/generated/model';
+import { useState } from 'react';
+import { Plus, UserPlus } from 'lucide-react';
+import type { ApplicationDto, ProjectMemberDto } from '@/api/generated/model';
+import { useListForProject } from '@/api/generated/endpoints/project-applications/project-applications';
 import { useProjectDetail } from '../use-project-detail';
-import { scoreColor } from '@/lib/utils';
+import { ProjectInviteDialog } from './project-invite-dialog';
+import { scoreColor, type Page } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +15,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// gleiche Params wie usePmApplications — gleiche QueryKey, Invalidate nach Accept greift hier auch
+const APPLICATIONS_PARAMS = { pageable: { page: 0, size: 50 } };
 
 export function CandidatesSection({
   projectId,
@@ -26,6 +32,30 @@ export function CandidatesSection({
 }) {
   const { candidates, isCandidatesLoading, addMemberMutation } =
     useProjectDetail(projectId, { isPM: true });
+
+  // addMember erfordert serverseitig eine ACCEPTED-Bewerbung — Liste nur für Owner nötig
+  const applicationsQuery = useListForProject(projectId, APPLICATIONS_PARAMS, {
+    query: { enabled: isOwner },
+  });
+  const acceptedUserIds = new Set(
+    (
+      applicationsQuery.data as unknown as Page<ApplicationDto> | undefined
+    )?.content
+      ?.filter((a) => a.status === 'ACCEPTED')
+      .map((a) => a.userId),
+  );
+  const invitedUserIds = new Set(
+    (
+      applicationsQuery.data as unknown as Page<ApplicationDto> | undefined
+    )?.content
+      ?.filter((a) => a.status === 'INVITED')
+      .map((a) => a.userId),
+  );
+
+  const [inviteTarget, setInviteTarget] = useState<{
+    userId: string;
+    userName: string;
+  }>();
 
   const memberIds = new Set(members?.map((m) => m.userId));
   const full = (members?.length ?? 0) >= maxMembers;
@@ -49,7 +79,7 @@ export function CandidatesSection({
           return (
             <div
               key={c.userId}
-              className="flex items-center justify-between gap-4 rounded-xl border p-3"
+              className="flex items-center justify-between gap-4 rounded-lg border p-3"
             >
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex items-center gap-2">
@@ -82,7 +112,7 @@ export function CandidatesSection({
                   ))}
                 </div>
               </div>
-              {isOwner && (
+              {isOwner && acceptedUserIds.has(c.userId ?? '') && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -98,6 +128,31 @@ export function CandidatesSection({
                   {full ? 'Voll' : 'Hinzufügen'}
                 </Button>
               )}
+              {isOwner &&
+                !acceptedUserIds.has(c.userId ?? '') &&
+                (invitedUserIds.has(c.userId ?? '') ? (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    Einladung offen
+                  </Badge>
+                ) : c.hasApplied ? (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    Bewerbung offen
+                  </Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setInviteTarget({
+                        userId: c.userId ?? '',
+                        userName: c.userName ?? '',
+                      })
+                    }
+                  >
+                    <UserPlus className="size-4" aria-hidden />
+                    Einladen
+                  </Button>
+                ))}
             </div>
           );
         })}
@@ -107,6 +162,15 @@ export function CandidatesSection({
           </p>
         )}
       </CardContent>
+      {inviteTarget && (
+        <ProjectInviteDialog
+          open
+          onOpenChange={(open) => !open && setInviteTarget(undefined)}
+          projectId={projectId}
+          userId={inviteTarget.userId}
+          userName={inviteTarget.userName}
+        />
+      )}
     </Card>
   );
 }

@@ -26,6 +26,7 @@ import type {
 import type {
   ApplicationDto,
   CreateApplicationRequest,
+  CreateInvitationRequest,
   DecideApplicationRequest,
   GlobalErrorCodeResponse,
   ListForProjectParams,
@@ -41,6 +42,71 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * Creates an INVITED application for the given user. Only the project owner (PROJECTMANAGER) can invite.
+ * @summary Invite a user to a project
+ */
+export const invite = (
+    projectId: string,
+    createInvitationRequest: CreateInvitationRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApplicationDto>(
+      {url: `/api/projects/${projectId}/invitations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createInvitationRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getInviteMutationOptions = <TError = ErrorType<GlobalErrorCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invite>>, TError,{projectId: string;data: CreateInvitationRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof invite>>, TError,{projectId: string;data: CreateInvitationRequest}, TContext> => {
+
+const mutationKey = ['invite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof invite>>, {projectId: string;data: CreateInvitationRequest}> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  invite(projectId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviteMutationResult = NonNullable<Awaited<ReturnType<typeof invite>>>
+    export type InviteMutationBody = CreateInvitationRequest
+    export type InviteMutationError = ErrorType<GlobalErrorCodeResponse>
+
+    /**
+ * @summary Invite a user to a project
+ */
+export const useInvite = <TError = ErrorType<GlobalErrorCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof invite>>, TError,{projectId: string;data: CreateInvitationRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof invite>>,
+        TError,
+        {projectId: string;data: CreateInvitationRequest},
+        TContext
+      > => {
+      return useMutation(getInviteMutationOptions(options), queryClient);
+    }
+    /**
  * Returns all applications for a project, PENDING first by default (overridable via sort param). Only the project owner (PROJECTMANAGER) can view.
  * @summary List applications for a project
  */
@@ -333,6 +399,68 @@ export const useDecline = <TError = ErrorType<GlobalErrorCodeResponse>,
       return useMutation(getDeclineMutationOptions(options), queryClient);
     }
     /**
+ * Declines an INVITED application and notifies the project manager. Only the invited user can decline.
+ * @summary Decline a project invitation
+ */
+export const declineProjectInvitation = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApplicationDto>(
+      {url: `/api/applications/${id}/decline-invitation`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getDeclineProjectInvitationMutationOptions = <TError = ErrorType<GlobalErrorCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declineProjectInvitation>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof declineProjectInvitation>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['declineProjectInvitation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof declineProjectInvitation>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  declineProjectInvitation(id,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeclineProjectInvitationMutationResult = NonNullable<Awaited<ReturnType<typeof declineProjectInvitation>>>
+    
+    export type DeclineProjectInvitationMutationError = ErrorType<GlobalErrorCodeResponse>
+
+    /**
+ * @summary Decline a project invitation
+ */
+export const useDeclineProjectInvitation = <TError = ErrorType<GlobalErrorCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declineProjectInvitation>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof declineProjectInvitation>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeclineProjectInvitationMutationOptions(options), queryClient);
+    }
+    /**
  * Accepts a PENDING application, adds the user as a project member, and notifies the applicant.
  * @summary Accept an application
  */
@@ -393,6 +521,68 @@ export const useAccept = <TError = ErrorType<GlobalErrorCodeResponse>,
         TContext
       > => {
       return useMutation(getAcceptMutationOptions(options), queryClient);
+    }
+    /**
+ * Accepts an INVITED application, adds the authenticated user as a project member, and notifies the project manager. Only the invited user can accept.
+ * @summary Accept a project invitation
+ */
+export const acceptProjectInvitation = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApplicationDto>(
+      {url: `/api/applications/${id}/accept-invitation`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getAcceptProjectInvitationMutationOptions = <TError = ErrorType<GlobalErrorCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptProjectInvitation>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptProjectInvitation>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['acceptProjectInvitation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptProjectInvitation>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  acceptProjectInvitation(id,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptProjectInvitationMutationResult = NonNullable<Awaited<ReturnType<typeof acceptProjectInvitation>>>
+    
+    export type AcceptProjectInvitationMutationError = ErrorType<GlobalErrorCodeResponse>
+
+    /**
+ * @summary Accept a project invitation
+ */
+export const useAcceptProjectInvitation = <TError = ErrorType<GlobalErrorCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptProjectInvitation>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof acceptProjectInvitation>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getAcceptProjectInvitationMutationOptions(options), queryClient);
     }
     /**
  * Returns all applications submitted by the authenticated user, newest first.

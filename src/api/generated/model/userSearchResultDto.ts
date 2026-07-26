@@ -5,8 +5,8 @@
  * OpenAPI spec version: v0
  */
 
-export interface SortObject {
-  empty?: boolean;
-  unsorted?: boolean;
-  sorted?: boolean;
+export interface UserSearchResultDto {
+  id?: string;
+  userName?: string;
+  email?: string;
 }
