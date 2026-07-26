@@ -66,12 +66,17 @@ export function LoginPage() {
         },
         onError: (error) => {
           const status = error.response?.status;
-          setError('root', {
-            message:
-              status === 401 || status === 403
-                ? 'E-Mail oder Passwort falsch.'
-                : 'Login fehlgeschlagen. Bitte später erneut versuchen.',
-          });
+          let message = 'Login fehlgeschlagen. Bitte später erneut versuchen.';
+          if (status === 401 || status === 403) {
+            message = 'E-Mail oder Passwort falsch.';
+          } else if (status === 423) {
+            message =
+              'Konto vorübergehend gesperrt. Bitte in 15 Minuten erneut versuchen.';
+          } else if (status === 429) {
+            message =
+              'Zu viele Versuche. Bitte in einer Minute erneut versuchen.';
+          }
+          setError('root', { message });
         },
       },
     );
