@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   getGetAllProjectsQueryKey,
   getGetProjectQueryKey,
@@ -111,6 +112,7 @@ export function ProjectFormDialog({
           queryKey: getGetProjectQueryKey(project.id),
         });
       }
+      toast.success(isEdit ? 'Projekt gespeichert' : 'Projekt angelegt');
       onOpenChange(false);
     };
     const onError = (error: unknown) => {
@@ -194,7 +196,7 @@ export function ProjectFormDialog({
               </p>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="project-start">Start</Label>
               <Input
@@ -224,7 +226,7 @@ export function ProjectFormDialog({
               )}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="project-max">Max. Mitglieder</Label>
               <Input

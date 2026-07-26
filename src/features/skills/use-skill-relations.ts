@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   getListBySkillQueryKey,
   useCreate1,
@@ -20,8 +21,24 @@ export function useSkillRelations(skillId?: string) {
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: getListBySkillQueryKey() });
 
-  const createMutation = useCreate1({ mutation: { onSuccess: invalidate } });
-  const deleteMutation = useDelete3({ mutation: { onSuccess: invalidate } });
+  const createMutation = useCreate1({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Relation angelegt');
+      },
+      onError: () => toast.error('Relation konnte nicht angelegt werden'),
+    },
+  });
+  const deleteMutation = useDelete3({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Relation gelöscht');
+      },
+      onError: () => toast.error('Relation konnte nicht gelöscht werden'),
+    },
+  });
 
   return {
     relations,

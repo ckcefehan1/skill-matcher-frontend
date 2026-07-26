@@ -1,8 +1,10 @@
 import { useAuthStore } from '@/stores/auth-store';
+import { usePageTitle } from '@/lib/use-page-title';
 import { PmMatching } from './pm-matching';
 import { EmployeeMatching } from './employee-matching';
 
 export function MatchingPage() {
+  usePageTitle('Matching');
   const user = useAuthStore((s) => s.user);
   const isPM = user?.role === 'PROJECTMANAGER';
 

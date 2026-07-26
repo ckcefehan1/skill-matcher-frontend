@@ -1,4 +1,6 @@
 import { useSkillCatalog } from './use-skill-catalog';
+import { QueryError } from '@/components/query-error';
+import { usePageTitle } from '@/lib/use-page-title';
 import { RelationCreateCard } from './components/relation-create-card';
 import { RelationBrowseCard } from './components/relation-browse-card';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +14,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function AdminSkillsPage() {
-  const { skills, isLoading } = useSkillCatalog();
+  usePageTitle('Skills');
+  const { skills, isLoading, isError, refetch } = useSkillCatalog();
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -31,6 +34,7 @@ export function AdminSkillsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {isError && <QueryError onRetry={() => refetch()} />}
           {isLoading && (
             <div className="flex flex-wrap gap-1.5">
               {Array.from({ length: 8 }).map((_, i) => (

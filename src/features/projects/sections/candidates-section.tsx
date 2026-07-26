@@ -1,7 +1,9 @@
-import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, UserPlus } from 'lucide-react';
 import type { ApplicationDto, ProjectMemberDto } from '@/api/generated/model';
 import { useListForProject } from '@/api/generated/endpoints/project-applications/project-applications';
 import { useProjectDetail } from '../use-project-detail';
+import { ProjectInviteDialog } from './project-invite-dialog';
 import { scoreColor, type Page } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +44,18 @@ export function CandidatesSection({
       ?.filter((a) => a.status === 'ACCEPTED')
       .map((a) => a.userId),
   );
+  const invitedUserIds = new Set(
+    (
+      applicationsQuery.data as unknown as Page<ApplicationDto> | undefined
+    )?.content
+      ?.filter((a) => a.status === 'INVITED')
+      .map((a) => a.userId),
+  );
+
+  const [inviteTarget, setInviteTarget] = useState<{
+    userId: string;
+    userName: string;
+  }>();
 
   const memberIds = new Set(members?.map((m) => m.userId));
   const full = (members?.length ?? 0) >= maxMembers;
@@ -65,7 +79,7 @@ export function CandidatesSection({
           return (
             <div
               key={c.userId}
-              className="flex items-center justify-between gap-4 rounded-xl border p-3"
+              className="flex items-center justify-between gap-4 rounded-lg border p-3"
             >
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex items-center gap-2">
@@ -114,11 +128,31 @@ export function CandidatesSection({
                   {full ? 'Voll' : 'Hinzufügen'}
                 </Button>
               )}
-              {isOwner && !acceptedUserIds.has(c.userId ?? '') && (
-                <Badge variant="outline" className="text-muted-foreground">
-                  {c.hasApplied ? 'Bewerbung offen' : 'Keine Bewerbung'}
-                </Badge>
-              )}
+              {isOwner &&
+                !acceptedUserIds.has(c.userId ?? '') &&
+                (invitedUserIds.has(c.userId ?? '') ? (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    Einladung offen
+                  </Badge>
+                ) : c.hasApplied ? (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    Bewerbung offen
+                  </Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setInviteTarget({
+                        userId: c.userId ?? '',
+                        userName: c.userName ?? '',
+                      })
+                    }
+                  >
+                    <UserPlus className="size-4" aria-hidden />
+                    Einladen
+                  </Button>
+                ))}
             </div>
           );
         })}
@@ -128,6 +162,15 @@ export function CandidatesSection({
           </p>
         )}
       </CardContent>
+      {inviteTarget && (
+        <ProjectInviteDialog
+          open
+          onOpenChange={(open) => !open && setInviteTarget(undefined)}
+          projectId={projectId}
+          userId={inviteTarget.userId}
+          userName={inviteTarget.userName}
+        />
+      )}
     </Card>
   );
 }

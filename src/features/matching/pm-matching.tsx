@@ -5,9 +5,11 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useProjectDetail } from '@/features/projects/use-project-detail';
 import { CandidatesSection } from '@/features/projects/sections/candidates-section';
 import { ApplicationsSection } from './sections/applications-section';
+import { UserSearchSection } from './sections/user-search-section';
 import { cn, PROJECT_STATUS_LABELS, type Page } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QueryError } from '@/components/query-error';
 
 export function PmMatching() {
   const user = useAuthStore((s) => s.user);
@@ -33,6 +35,10 @@ export function PmMatching() {
         <Skeleton className="h-48 w-full" />
       </div>
     );
+  }
+
+  if (projectsQuery.isError) {
+    return <QueryError onRetry={() => projectsQuery.refetch()} />;
   }
 
   if (!ownProjects || ownProjects.length === 0) {
@@ -68,6 +74,7 @@ export function PmMatching() {
       </div>
       {selectedProjectId && (
         <>
+          <UserSearchSection projectId={selectedProjectId} members={members} />
           <CandidatesSection
             projectId={selectedProjectId}
             isOwner

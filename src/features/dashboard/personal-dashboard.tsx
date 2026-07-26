@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { ArrowRight, CalendarDays, Sparkles, Target, Wrench } from 'lucide-react';
 import type { ProjectMatchDto } from '@/api/generated/model';
 import { usePersonalDashboardData } from './use-dashboard-data';
+import { QueryError } from '@/components/query-error';
 import { StatCard } from './components/stat-card';
 import { MySkillsCard } from './components/my-skills-card';
 import { MyAvailabilityCard } from './components/my-availability-card';
@@ -23,7 +24,7 @@ function MatchCard({ match }: { match: ProjectMatchDto }) {
     <Link
       to="/projects/$projectId"
       params={{ projectId: match.projectId ?? '' }}
-      className="block rounded-xl border bg-card p-4 transition-colors hover:border-primary/40"
+      className="block rounded-lg border bg-card p-4 transition-colors hover:border-primary/40"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
@@ -55,6 +56,8 @@ export function PersonalDashboard() {
   const {
     matches,
     matchesLoading,
+    isMatchesError,
+    refetchMatches,
     skills,
     skillsLoading,
     availability,
@@ -106,6 +109,9 @@ export function PersonalDashboard() {
               Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-24 w-full" />
               ))}
+            {isMatchesError && (
+              <QueryError onRetry={() => refetchMatches()} />
+            )}
             {matches?.map((m) => <MatchCard key={m.projectId} match={m} />)}
             {matches && matches.length === 0 && (
               <div className="flex flex-col items-center gap-2 py-8 text-center">

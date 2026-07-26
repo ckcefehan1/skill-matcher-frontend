@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   getFindProjectsForMeQueryKey,
   useFindProjectsForMe,
@@ -7,8 +8,11 @@ import {
   getListForProjectQueryKey,
   getListForUserQueryKey,
   useAccept,
+  useAcceptProjectInvitation,
   useApply,
   useDecline,
+  useDeclineProjectInvitation,
+  useInvite,
   useListForProject,
   useListForUser,
   useWithdraw,
@@ -38,9 +42,23 @@ export function useEmployeeMatching() {
     });
   };
 
-  const applyMutation = useApply({ mutation: { onSuccess: invalidate } });
+  const applyMutation = useApply({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Bewerbung gesendet');
+      },
+      onError: () => toast.error('Bewerbung fehlgeschlagen'),
+    },
+  });
   const withdrawMutation = useWithdraw({
-    mutation: { onSuccess: invalidate },
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Bewerbung zurückgezogen');
+      },
+      onError: () => toast.error('Zurückziehen fehlgeschlagen'),
+    },
   });
 
   const applications = (
@@ -50,9 +68,56 @@ export function useEmployeeMatching() {
   return {
     matches: matchesQuery.data as unknown as ProjectMatchDto[] | undefined,
     isMatchesLoading: matchesQuery.isLoading,
+    isMatchesError: matchesQuery.isError,
+    refetchMatches: matchesQuery.refetch,
     applications,
     applyMutation,
     withdrawMutation,
+  };
+}
+
+export function useEmployeeInvitations() {
+  const queryClient = useQueryClient();
+
+  const applicationsQuery = useListForUser(MY_APPLICATIONS_PARAMS);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({
+      queryKey: getListForUserQueryKey(MY_APPLICATIONS_PARAMS),
+    });
+    queryClient.invalidateQueries({
+      queryKey: getFindProjectsForMeQueryKey(MY_MATCHES_PARAMS),
+    });
+  };
+
+  const acceptMutation = useAcceptProjectInvitation({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Einladung angenommen');
+      },
+      onError: () => toast.error('Aktion fehlgeschlagen'),
+    },
+  });
+  const declineMutation = useDeclineProjectInvitation({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Einladung abgelehnt');
+      },
+      onError: () => toast.error('Aktion fehlgeschlagen'),
+    },
+  });
+
+  const invitations = (
+    applicationsQuery.data as unknown as Page<ApplicationDto> | undefined
+  )?.content?.filter((a) => a.status === 'INVITED');
+
+  return {
+    invitations,
+    isInvitationsLoading: applicationsQuery.isLoading,
+    acceptMutation,
+    declineMutation,
   };
 }
 
@@ -82,8 +147,33 @@ export function usePmApplications(projectId?: string) {
     });
   };
 
-  const acceptMutation = useAccept({ mutation: { onSuccess: invalidate } });
-  const declineMutation = useDecline({ mutation: { onSuccess: invalidate } });
+  const acceptMutation = useAccept({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Bewerbung angenommen');
+      },
+      onError: () => toast.error('Aktion fehlgeschlagen'),
+    },
+  });
+  const declineMutation = useDecline({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Bewerbung abgelehnt');
+      },
+      onError: () => toast.error('Aktion fehlgeschlagen'),
+    },
+  });
+  const inviteMutation = useInvite({
+    mutation: {
+      onSuccess: () => {
+        invalidate();
+        toast.success('Einladung versendet');
+      },
+      onError: () => toast.error('Einladung fehlgeschlagen'),
+    },
+  });
 
   return {
     applications: (
@@ -92,5 +182,6 @@ export function usePmApplications(projectId?: string) {
     isApplicationsLoading: applicationsQuery.isLoading,
     acceptMutation,
     declineMutation,
+    inviteMutation,
   };
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useMySkills } from './use-my-skills';
+import { QueryError } from '@/components/query-error';
 import { useSkillCatalog } from './use-skill-catalog';
 import { Badge } from '@/components/ui/badge';
 import { LevelDots } from '@/components/level-dots';
@@ -16,9 +17,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { usePageTitle } from '@/lib/use-page-title';
 
 export function SkillsPage() {
-  const { skills, isLoading, addMutation, deleteMutation } = useMySkills();
+  usePageTitle('Skills');
+  const { skills, isLoading, isError, refetch, addMutation, deleteMutation } = useMySkills();
   const { skills: catalog } = useSkillCatalog();
 
   const [name, setName] = useState('');
@@ -56,6 +59,7 @@ export function SkillsPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {isLoading && <Skeleton className="h-8 w-full" />}
+          {isError && <QueryError onRetry={() => refetch()} />}
           {skills && skills.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {skills.map((s) => (

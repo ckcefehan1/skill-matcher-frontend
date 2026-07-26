@@ -106,7 +106,7 @@ export function SkillsSection({
         )}
         {isOwner && (
           <div className="flex flex-col gap-3 border-t pt-4">
-            <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
+            <div className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[1fr_auto_auto]">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="skill-name">Skill</Label>
                 <Input

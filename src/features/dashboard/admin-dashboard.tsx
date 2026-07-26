@@ -8,6 +8,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useAdminDashboardData } from './use-dashboard-data';
+import { QueryError } from '@/components/query-error';
 import { StatCard } from './components/stat-card';
 import { InviteUserDialog } from '@/features/admin/invite-user-dialog';
 import { isUserEnabled, ROLE_LABELS } from '@/features/admin/admin-user';
@@ -33,6 +34,8 @@ export function AdminDashboard() {
     usersLoading,
     projectsLoading,
     skillsLoading,
+    isError,
+    refetch,
   } = useAdminDashboardData();
 
   const activeUsers = users?.filter((u) => isUserEnabled(u)).length ?? 0;
@@ -50,6 +53,7 @@ export function AdminDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
+      {isError && <QueryError onRetry={refetch} />}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           icon={Users}

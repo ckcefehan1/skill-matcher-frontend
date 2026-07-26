@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { queryClient } from '@/lib/query-client';
 
 export interface User {
   id: string;
@@ -32,11 +33,16 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) =>
         set({ user }),
 
-      login: (accessToken, refreshToken, user) =>
-        set({ accessToken, refreshToken, user }),
+      login: (accessToken, refreshToken, user) => {
+        // Identitätswechsel: gecachte Daten des vorherigen Users verwerfen
+        queryClient.clear();
+        set({ accessToken, refreshToken, user });
+      },
 
-      logout: () =>
-        set({ accessToken: null, refreshToken: null, user: null }),
+      logout: () => {
+        queryClient.clear();
+        set({ accessToken: null, refreshToken: null, user: null });
+      },
     }),
     {
       name: 'auth-storage',

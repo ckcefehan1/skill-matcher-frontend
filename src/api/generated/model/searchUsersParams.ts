@@ -4,9 +4,9 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type { Pageable } from './pageable';
 
-export interface SortObject {
-  empty?: boolean;
-  unsorted?: boolean;
-  sorted?: boolean;
-}
+export type SearchUsersParams = {
+q?: string;
+pageable: Pageable;
+};

@@ -18,7 +18,10 @@ export function ApplicationsSection({ projectId }: { projectId: string }) {
     usePmApplications(projectId);
 
   const pending = applications?.filter((a) => a.status === 'PENDING');
-  const decided = applications?.filter((a) => a.status !== 'PENDING');
+  const invited = applications?.filter((a) => a.status === 'INVITED');
+  const decided = applications?.filter(
+    (a) => a.status !== 'PENDING' && a.status !== 'INVITED',
+  );
   const busy = acceptMutation.isPending || declineMutation.isPending;
 
   return (
@@ -26,7 +29,7 @@ export function ApplicationsSection({ projectId }: { projectId: string }) {
       <CardHeader>
         <CardTitle className="text-base">Bewerbungen</CardTitle>
         <CardDescription>
-          Eingehende Bewerbungen für dieses Projekt
+          Eingehende Bewerbungen und gesendete Einladungen
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
@@ -37,11 +40,11 @@ export function ApplicationsSection({ projectId }: { projectId: string }) {
         {pending?.map((a) => (
           <div
             key={a.id}
-            className="flex items-center justify-between gap-4 rounded-xl border p-3"
+            className="flex items-center justify-between gap-4 rounded-lg border p-3"
           >
             <div className="flex min-w-0 flex-col gap-1">
               <span className="truncate text-sm font-medium">{a.userName}</span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground tabular-nums">
                 {formatDate(a.appliedAt)}
                 {a.message ? ` · ${a.message}` : ''}
               </span>
@@ -70,14 +73,31 @@ export function ApplicationsSection({ projectId }: { projectId: string }) {
             </div>
           </div>
         ))}
-        {decided?.map((a) => (
+        {invited?.map((a) => (
           <div
             key={a.id}
-            className="flex items-center justify-between gap-4 rounded-xl border p-3 opacity-60"
+            className="flex items-center justify-between gap-4 rounded-lg border p-3"
           >
             <div className="flex min-w-0 flex-col gap-1">
               <span className="truncate text-sm font-medium">{a.userName}</span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {formatDate(a.appliedAt)}
+                {a.message ? ` · ${a.message}` : ''}
+              </span>
+            </div>
+            <Badge variant="outline" className="text-muted-foreground">
+              Einladung offen
+            </Badge>
+          </div>
+        ))}
+        {decided?.map((a) => (
+          <div
+            key={a.id}
+            className="flex items-center justify-between gap-4 rounded-lg border p-3 opacity-60"
+          >
+            <div className="flex min-w-0 flex-col gap-1">
+              <span className="truncate text-sm font-medium">{a.userName}</span>
+              <span className="text-xs text-muted-foreground tabular-nums">
                 {formatDate(a.appliedAt)}
               </span>
             </div>

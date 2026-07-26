@@ -12,6 +12,7 @@ import type { User } from '@/stores/auth-store';
 import { passwordSchema } from './password-schema';
 import { PasswordRequirements } from './password-requirements';
 import { PasswordInput } from './password-input';
+import { AuthShell } from './auth-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,8 +96,8 @@ export function InvitationAcceptPage() {
     (validateMutation.isSuccess && !validateMutation.data?.valid);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 p-6">
-      <Card className="w-full max-w-sm">
+    <AuthShell>
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl tracking-tight">
             Einladung annehmen
@@ -193,6 +194,6 @@ export function InvitationAcceptPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </AuthShell>
   );
 }

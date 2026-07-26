@@ -1,9 +1,11 @@
 import { useAuthStore } from '@/stores/auth-store';
+import { usePageTitle } from '@/lib/use-page-title';
 import { AdminDashboard } from './admin-dashboard';
 import { PmDashboard } from './pm-dashboard';
 import { PersonalDashboard } from './personal-dashboard';
 
 export function DashboardPage() {
+  usePageTitle('Übersicht');
   const user = useAuthStore((s) => s.user);
 
   const today = new Date().toLocaleDateString('de-DE', {

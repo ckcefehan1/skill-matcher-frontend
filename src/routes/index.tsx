@@ -66,7 +66,16 @@ const availabilityRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/availability',
   beforeLoad: noAdmin,
-  component: () => <div>Availability (TODO)</div>,
+  component: () => (
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-medium tracking-tight">Verfügbarkeit</h1>
+        <p className="text-sm text-muted-foreground">
+          Diese Seite ist noch in Arbeit.
+        </p>
+      </div>
+    </div>
+  ),
 });
 
 const projectsRoute = createRoute({
