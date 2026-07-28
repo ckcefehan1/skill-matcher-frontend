@@ -49,9 +49,9 @@ export function LoginPage() {
       { data: values },
       {
         onSuccess: (res) => {
-          if (!res.accessToken || !res.refreshToken || !res.user) return;
+          if (!res.user) return;
           const u = res.user;
-          storeLogin(res.accessToken, res.refreshToken, {
+          storeLogin({
             id: u.id ?? '',
             email: u.email ?? '',
             firstName: u.firstName ?? '',

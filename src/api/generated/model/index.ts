@@ -61,7 +61,6 @@ export * from './projectDto';
 export * from './projectMatchDto';
 export * from './projectMemberDto';
 export * from './projectSkillDto';
-export * from './refreshTokenRequest';
 export * from './searchUsersParams';
 export * from './skillDto';
 export * from './skillRelationDto';

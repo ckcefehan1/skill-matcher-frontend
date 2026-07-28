@@ -78,8 +78,8 @@ export const authenticatedRoute = createRoute({
     id: '_authenticated',
     getParentRoute: () => rootRoute,
     beforeLoad: ({ location }) => {
-      const { accessToken } = useAuthStore.getState();
-      if (!accessToken) {
+      const { user } = useAuthStore.getState();
+      if (!user) {
         throw redirect({
           to: '/login',
           search: { redirect: location.href },

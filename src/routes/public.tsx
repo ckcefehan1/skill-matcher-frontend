@@ -6,8 +6,8 @@ export const publicRoute = createRoute({
   id: '_public',
   getParentRoute: () => rootRoute,
   beforeLoad: () => {
-    const { accessToken } = useAuthStore.getState();
-    if (accessToken) {
+    const { user } = useAuthStore.getState();
+    if (user) {
       throw redirect({ to: '/' });
     }
   },

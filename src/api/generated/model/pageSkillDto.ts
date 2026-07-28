@@ -9,15 +9,15 @@ import type { SkillDto } from './skillDto';
 import type { SortObject } from './sortObject';
 
 export interface PageSkillDto {
-  totalElements?: number;
   totalPages?: number;
+  totalElements?: number;
   size?: number;
   content?: SkillDto[];
   number?: number;
   first?: boolean;
   last?: boolean;
-  numberOfElements?: number;
   sort?: SortObject;
   pageable?: PageableObject;
+  numberOfElements?: number;
   empty?: boolean;
 }
