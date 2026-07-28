@@ -15,7 +15,11 @@ const readCookie = (name: string): string | null => {
 };
 
 // Ensures the XSRF-TOKEN cookie exists before the first mutating request
-export const bootstrapCsrf = () => axiosInstance.get('/api/auth/csrf').catch(() => {});
+export const bootstrapCsrf = () =>
+  axiosInstance.get('/api/auth/csrf').catch((error: unknown) => {
+    // without the cookie every mutating request 403s — the retry interceptor below recovers once
+    console.warn('CSRF bootstrap failed, first mutating request may be rejected', error);
+  });
 
 axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (!SAFE_METHODS.has(config.method ?? 'get')) {
@@ -56,7 +60,26 @@ axiosInstance.interceptors.response.use(async (response) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+      _csrfRetried?: boolean;
+    };
+
+    // CSRF cookie missing or expired (e.g. bootstrap failed at app start): re-bootstrap once and retry.
+    // Server re-evaluates a genuine 403 (e.g. admin-only) and rejects again.
+    if (
+      error.response?.status === 403 &&
+      !originalRequest._csrfRetried &&
+      !SAFE_METHODS.has(originalRequest.method ?? 'get')
+    ) {
+      originalRequest._csrfRetried = true;
+      try {
+        await axiosInstance.get('/api/auth/csrf');
+      } catch {
+        return Promise.reject(error);
+      }
+      return axiosInstance(originalRequest);
+    }
 
     if (
       error.response?.status !== 401 ||
