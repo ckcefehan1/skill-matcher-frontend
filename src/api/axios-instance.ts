@@ -76,7 +76,7 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      await axiosInstance.post('/api/auth/refresh');
+      await refreshTokens();
       processQueue(null);
       return axiosInstance(originalRequest);
     } catch (refreshError) {
@@ -88,6 +88,19 @@ axiosInstance.interceptors.response.use(
     }
   },
 );
+
+// Cross-tab single-flight: only one tab refreshes at a time; the others wait
+// and then send the already-rotated cookie (shared jar) instead of the stale one.
+// ponytail: waiting tabs refresh once more with the fresh cookie — harmless extra
+// rotation, avoids unobservable "did the other tab already refresh" checks on httpOnly cookies.
+const refreshTokens = (): Promise<unknown> => {
+  if (typeof navigator === 'undefined' || !navigator.locks) {
+    return axiosInstance.post('/api/auth/refresh');
+  }
+  return navigator.locks.request('auth-refresh', () =>
+    axiosInstance.post('/api/auth/refresh'),
+  );
+};
 
 export const customInstance = <T>(
   config: AxiosRequestConfig,
