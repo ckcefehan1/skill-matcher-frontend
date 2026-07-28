@@ -11,41 +11,35 @@ export interface User {
 }
 
 interface AuthState {
-  accessToken: string | null;
-  refreshToken: string | null;
   user: User | null;
-  setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: User) => void;
-  login: (accessToken: string, refreshToken: string, user: User) => void;
+  login: (user: User) => void;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      accessToken: null,
-      refreshToken: null,
       user: null,
-
-      setTokens: (accessToken, refreshToken) =>
-        set({ accessToken, refreshToken }),
 
       setUser: (user) =>
         set({ user }),
 
-      login: (accessToken, refreshToken, user) => {
+      login: (user) => {
         // Identitätswechsel: gecachte Daten des vorherigen Users verwerfen
         queryClient.clear();
-        set({ accessToken, refreshToken, user });
+        set({ user });
       },
 
       logout: () => {
         queryClient.clear();
-        set({ accessToken: null, refreshToken: null, user: null });
+        set({ user: null });
       },
     }),
     {
       name: 'auth-storage',
+      // v1: tokens moved to httpOnly cookies — drop persisted tokens from v0
+      version: 1,
     },
   ),
 );

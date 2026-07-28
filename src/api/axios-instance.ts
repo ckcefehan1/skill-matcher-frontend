@@ -1,32 +1,44 @@
 import Axios from 'axios';
 import type { AxiosRequestConfig, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/auth-store';
-import type { AuthResponse } from '@/api/generated/model';
 
 export const axiosInstance = Axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
 });
 
+const SAFE_METHODS = new Set(['get', 'head', 'options']);
+
+const readCookie = (name: string): string | null => {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+// Ensures the XSRF-TOKEN cookie exists before the first mutating request
+export const bootstrapCsrf = () => axiosInstance.get('/api/auth/csrf').catch(() => {});
+
 axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const { accessToken } = useAuthStore.getState();
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
+  if (!SAFE_METHODS.has(config.method ?? 'get')) {
+    const xsrfToken = readCookie('XSRF-TOKEN');
+    if (xsrfToken) {
+      config.headers['X-XSRF-TOKEN'] = xsrfToken;
+    }
   }
   return config;
 });
 
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (token: string) => void;
+  resolve: () => void;
   reject: (error: unknown) => void;
 }> = [];
 
-const processQueue = (error: unknown, token: string | null) => {
+const processQueue = (error: unknown) => {
   failedQueue.forEach(({ resolve, reject }) => {
-    if (token) {
-      resolve(token);
-    } else {
+    if (error) {
       reject(error);
+    } else {
+      resolve();
     }
   });
   failedQueue = [];
@@ -46,50 +58,30 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      originalRequest.url?.includes('/auth/refresh')
+    ) {
       return Promise.reject(error);
     }
 
     if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         failedQueue.push({ resolve, reject });
-      }).then((token) => {
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return axiosInstance(originalRequest);
-      });
+      }).then(() => axiosInstance(originalRequest));
     }
 
     originalRequest._retry = true;
     isRefreshing = true;
 
-    const { refreshToken, logout, setTokens } = useAuthStore.getState();
-
-    if (!refreshToken) {
-      isRefreshing = false;
-      logout();
-      return Promise.reject(error);
-    }
-
     try {
-      const { data } = await Axios.post<AuthResponse>(
-        '/api/auth/refresh',
-        { refreshToken },
-      );
-
-      const newAccessToken = data.accessToken;
-      const newRefreshToken = data.refreshToken;
-      if (!newAccessToken || !newRefreshToken) {
-        throw new Error('Refresh response missing tokens');
-      }
-
-      setTokens(newAccessToken, newRefreshToken);
-      processQueue(null, newAccessToken);
-
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      await axiosInstance.post('/api/auth/refresh');
+      processQueue(null);
       return axiosInstance(originalRequest);
     } catch (refreshError) {
-      processQueue(refreshError, null);
-      logout();
+      processQueue(refreshError);
+      useAuthStore.getState().logout();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

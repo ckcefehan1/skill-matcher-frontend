@@ -95,7 +95,7 @@ export const useValidateInvitation = <TError = ErrorType<GlobalErrorCodeResponse
       return useMutation(getValidateInvitationMutationOptions(options), queryClient);
     }
     /**
- * Accepts an invitation token, sets the user's password and profile (firstName, lastName). Returns access and refresh tokens.
+ * Accepts an invitation token, sets the user's password and profile (firstName, lastName). Sets httpOnly access_token and refresh_token cookies.
  * @summary Accept invitation
  */
 export const acceptInvitation = (

@@ -5,21 +5,29 @@
  * OpenAPI spec version: v0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   AuthResponse,
   ChangePasswordRequest,
   GlobalErrorCodeResponse,
-  LoginRequest,
-  RefreshTokenRequest
+  LoginRequest
 } from '../../model';
 
 import { customInstance } from '../../../axios-instance';
@@ -31,19 +39,17 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Uses a valid refresh token to generate a new access token. If the refresh token is close to expiration (< 2 days), it will be rotated.
+ * Uses the refresh_token cookie to issue a new access token. The refresh token is rotated on every use; reuse of a rotated token revokes the whole token family.
  * @summary Refresh access token
  */
 export const refreshToken = (
-    refreshTokenRequest: RefreshTokenRequest,
+    
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<AuthResponse>(
-      {url: `/api/auth/refresh`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: refreshTokenRequest, signal
+      {url: `/api/auth/refresh`, method: 'POST', signal
     },
       options);
     }
@@ -51,8 +57,8 @@ export const refreshToken = (
 
 
 export const getRefreshTokenMutationOptions = <TError = ErrorType<GlobalErrorCodeResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshToken>>, TError,{data: RefreshTokenRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof refreshToken>>, TError,{data: RefreshTokenRequest}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshToken>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshToken>>, TError,void, TContext> => {
 
 const mutationKey = ['refreshToken'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -64,10 +70,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshToken>>, {data: RefreshTokenRequest}> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshToken>>, void> = () => {
+          
 
-          return  refreshToken(data,requestOptions)
+          return  refreshToken(requestOptions)
         }
 
 
@@ -78,18 +84,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type RefreshTokenMutationResult = NonNullable<Awaited<ReturnType<typeof refreshToken>>>
-    export type RefreshTokenMutationBody = RefreshTokenRequest
+    
     export type RefreshTokenMutationError = ErrorType<GlobalErrorCodeResponse>
 
     /**
  * @summary Refresh access token
  */
 export const useRefreshToken = <TError = ErrorType<GlobalErrorCodeResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshToken>>, TError,{data: RefreshTokenRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshToken>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof refreshToken>>,
         TError,
-        {data: RefreshTokenRequest},
+        void,
         TContext
       > => {
       return useMutation(getRefreshTokenMutationOptions(options), queryClient);
@@ -157,7 +163,7 @@ export const useLogout = <TError = ErrorType<GlobalErrorCodeResponse>,
       return useMutation(getLogoutMutationOptions(options), queryClient);
     }
     /**
- * Authenticates a user and returns access and refresh tokens
+ * Authenticates a user and sets httpOnly access_token and refresh_token cookies. Requires the X-XSRF-TOKEN header.
  * @summary Login user
  */
 export const login = (
@@ -284,4 +290,94 @@ export const useChangePassword = <TError = ErrorType<GlobalErrorCodeResponse>,
       > => {
       return useMutation(getChangePasswordMutationOptions(options), queryClient);
     }
+    /**
+ * Safe endpoint that forces the XSRF-TOKEN cookie to be written. Call once before the first mutating request.
+ * @summary Bootstrap CSRF token
+ */
+export const csrf = (
     
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/auth/csrf`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getCsrfQueryKey = () => {
+    return [
+    `/api/auth/csrf`
+    ] as const;
+    }
+
+    
+export const getCsrfQueryOptions = <TData = Awaited<ReturnType<typeof csrf>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrf>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCsrfQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof csrf>>> = ({ signal }) => csrf(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof csrf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CsrfQueryResult = NonNullable<Awaited<ReturnType<typeof csrf>>>
+export type CsrfQueryError = ErrorType<unknown>
+
+
+export function useCsrf<TData = Awaited<ReturnType<typeof csrf>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrf>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof csrf>>,
+          TError,
+          Awaited<ReturnType<typeof csrf>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCsrf<TData = Awaited<ReturnType<typeof csrf>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrf>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof csrf>>,
+          TError,
+          Awaited<ReturnType<typeof csrf>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCsrf<TData = Awaited<ReturnType<typeof csrf>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrf>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Bootstrap CSRF token
+ */
+
+export function useCsrf<TData = Awaited<ReturnType<typeof csrf>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof csrf>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCsrfQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+

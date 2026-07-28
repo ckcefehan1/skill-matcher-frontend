@@ -9,15 +9,15 @@ import type { SortObject } from './sortObject';
 import type { UserSearchResultDto } from './userSearchResultDto';
 
 export interface PageUserSearchResultDto {
-  totalElements?: number;
   totalPages?: number;
+  totalElements?: number;
   size?: number;
   content?: UserSearchResultDto[];
   number?: number;
   first?: boolean;
   last?: boolean;
-  numberOfElements?: number;
   sort?: SortObject;
   pageable?: PageableObject;
+  numberOfElements?: number;
   empty?: boolean;
 }
