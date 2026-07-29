@@ -96,9 +96,6 @@ export function MessagePane({ conversation, onBack }: Props) {
   };
 
   const partnerName = partnerDisplayName(conversation.partner);
-  const lastOwnRead = [...(messages ?? [])]
-    .reverse()
-    .find((m) => m.senderId === myId && m.readAt);
 
   return (
     <>
@@ -167,15 +164,6 @@ export function MessagePane({ conversation, onBack }: Props) {
             );
           })}
         </div>
-        {lastOwnRead?.readAt && (
-          <p className="mt-1 text-right text-[10px] text-muted-foreground">
-            Gelesen{' '}
-            {new Date(lastOwnRead.readAt).toLocaleTimeString('de-DE', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
-        )}
         <div ref={bottomRef} />
       </div>
 
