@@ -1,10 +1,17 @@
+import { useEffect } from 'react';
 import { createRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router';
 import { Menu } from 'lucide-react';
 import { rootRoute } from './__root';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLogout } from '@/api/generated/endpoints/authentication/authentication';
+import {
+  getNotifications,
+  getUnreadCount,
+} from '@/api/generated/endpoints/notifications/notifications';
+import type { AppNotification } from '@/features/chat/chat-types';
 import { AppSidebar, navItemsForRole } from '@/components/app-sidebar';
 import { Logo } from '@/components/logo';
+import { NotificationBell } from '@/components/notification-bell';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,6 +20,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { connectStomp, disconnectStomp } from '@/lib/stomp-client';
+import { useNotificationStore } from '@/stores/notification-store';
 
 function MobileMenu() {
   const navigate = useNavigate();
@@ -37,30 +46,49 @@ function MobileMenu() {
   return (
     <div className="flex h-14 items-center justify-between border-b bg-card px-4 md:hidden">
       <Logo />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Menü öffnen">
-            <Menu className="size-5" aria-hidden />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {items.map((item) => (
-            <DropdownMenuItem key={item.to} onClick={() => navigate({ to: item.to })}>
-              {item.label}
+      <div className="flex items-center gap-1">
+        <NotificationBell />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Menü öffnen">
+              <Menu className="size-5" aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {items.map((item) => (
+              <DropdownMenuItem key={item.to} onClick={() => navigate({ to: item.to })}>
+                {item.label}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate({ to: '/change-password' })}>
+              Passwort ändern
             </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate({ to: '/change-password' })}>
-            Passwort ändern
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onLogout}>Abmelden</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuItem onClick={onLogout}>Abmelden</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
 
 function AuthenticatedLayout() {
+  useEffect(() => {
+    connectStomp();
+    // seed notification store from REST; live pushes arrive via STOMP
+    Promise.all([
+      getNotifications({ limit: 30 }) as unknown as Promise<AppNotification[]>,
+      getUnreadCount() as unknown as Promise<{ count: number }>,
+    ])
+      .then(([list, count]) => {
+        useNotificationStore.getState().setInitial(list, count.count);
+      })
+      .catch(() => {
+        // bell stays empty until the first push — non-fatal
+      });
+    return () => disconnectStomp();
+  }, []);
+
   return (
     <div className="flex min-h-screen">
       <AppSidebar />

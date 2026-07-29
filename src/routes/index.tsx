@@ -13,6 +13,7 @@ import { SkillsPage } from '@/features/skills/skills-page';
 import { AdminSkillsPage } from '@/features/skills/admin-skills-page';
 import { ProjectsPage } from '@/features/projects/projects-page';
 import { ProjectDetailPage } from '@/features/projects/project-detail-page';
+import { ChatPage } from '@/features/chat/chat-page';
 import { MatchingPage } from '@/features/matching/matching-page';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -90,6 +91,12 @@ const projectDetailRoute = createRoute({
   component: ProjectDetailPage,
 });
 
+const chatRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: '/chat',
+  component: ChatPage,
+});
+
 const matchingRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/matching',
@@ -137,6 +144,7 @@ const routeTree = rootRoute.addChildren([
     availabilityRoute,
     projectsRoute,
     projectDetailRoute,
+    chatRoute,
     matchingRoute,
     adminUsersRoute,
     adminSkillsRoute,
