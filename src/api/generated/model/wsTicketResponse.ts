@@ -5,8 +5,7 @@
  * OpenAPI spec version: v0
  */
 
-export interface SortObject {
-  empty?: boolean;
-  sorted?: boolean;
-  unsorted?: boolean;
+export interface WsTicketResponse {
+  ticket?: string;
+  expiresInSeconds?: number;
 }
