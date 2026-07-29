@@ -9,15 +9,15 @@ import type { ProjectDto } from './projectDto';
 import type { SortObject } from './sortObject';
 
 export interface PageProjectDto {
-  totalPages?: number;
   totalElements?: number;
+  totalPages?: number;
   size?: number;
   content?: ProjectDto[];
   number?: number;
   first?: boolean;
   last?: boolean;
-  sort?: SortObject;
   pageable?: PageableObject;
   numberOfElements?: number;
+  sort?: SortObject;
   empty?: boolean;
 }

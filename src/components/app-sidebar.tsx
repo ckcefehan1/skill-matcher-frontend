@@ -6,6 +6,7 @@ import {
   KeyRound,
   LayoutDashboard,
   LogOut,
+  MessagesSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
@@ -15,11 +16,13 @@ import {
 import { useLogout } from '@/api/generated/endpoints/authentication/authentication';
 import { useAuthStore } from '@/stores/auth-store';
 import { Logo } from '@/components/logo';
+import { NotificationBell } from '@/components/notification-bell';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Übersicht', icon: LayoutDashboard },
   { to: '/projects', label: 'Projekte', icon: FolderKanban },
+  { to: '/chat', label: 'Nachrichten', icon: MessagesSquare },
   { to: '/matching', label: 'Matching', icon: Sparkles },
   { to: '/skills', label: 'Skills', icon: Wrench },
   { to: '/availability', label: 'Verfügbarkeit', icon: CalendarDays },
@@ -126,13 +129,21 @@ export function AppSidebar() {
 
       <div className="flex flex-col gap-1 border-t p-2">
         {!collapsed && (
-          <div className="px-3 py-2">
-            <p className="truncate text-sm font-medium">
-              {user?.firstName} {user?.lastName}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {user?.email}
-            </p>
+          <div className="flex items-center justify-between gap-2 px-3 py-2">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {user?.email}
+              </p>
+            </div>
+            <NotificationBell />
+          </div>
+        )}
+        {collapsed && (
+          <div className="flex justify-center py-1">
+            <NotificationBell />
           </div>
         )}
         <Link

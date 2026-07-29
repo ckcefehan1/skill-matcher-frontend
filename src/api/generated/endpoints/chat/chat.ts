@@ -26,7 +26,8 @@ import type {
 import type {
   CreateConversationRequest,
   GetMessagesParams,
-  GlobalErrorCodeResponse
+  GlobalErrorCodeResponse,
+  SearchChatPartnersParams
 } from '../../model';
 
 import { customInstance } from '../../../axios-instance';
@@ -195,6 +196,99 @@ export const useCreateConversation = <TError = ErrorType<GlobalErrorCodeResponse
       return useMutation(getCreateConversationMutationOptions(options), queryClient);
     }
     /**
+ * Searches enabled users by name or email. Any authenticated user may search for chat partners.
+ * @summary Search chat partners
+ */
+export const searchChatPartners = (
+    params: SearchChatPartnersParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<Blob>(
+      {url: `/api/chat/users/search`, method: 'GET',
+        params,
+        responseType: 'blob', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getSearchChatPartnersQueryKey = (params?: SearchChatPartnersParams,) => {
+    return [
+    `/api/chat/users/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+    
+export const getSearchChatPartnersQueryOptions = <TData = Awaited<ReturnType<typeof searchChatPartners>>, TError = ErrorType<GlobalErrorCodeResponse>>(params: SearchChatPartnersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchChatPartners>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchChatPartnersQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchChatPartners>>> = ({ signal }) => searchChatPartners(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchChatPartners>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SearchChatPartnersQueryResult = NonNullable<Awaited<ReturnType<typeof searchChatPartners>>>
+export type SearchChatPartnersQueryError = ErrorType<GlobalErrorCodeResponse>
+
+
+export function useSearchChatPartners<TData = Awaited<ReturnType<typeof searchChatPartners>>, TError = ErrorType<GlobalErrorCodeResponse>>(
+ params: SearchChatPartnersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchChatPartners>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchChatPartners>>,
+          TError,
+          Awaited<ReturnType<typeof searchChatPartners>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchChatPartners<TData = Awaited<ReturnType<typeof searchChatPartners>>, TError = ErrorType<GlobalErrorCodeResponse>>(
+ params: SearchChatPartnersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchChatPartners>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchChatPartners>>,
+          TError,
+          Awaited<ReturnType<typeof searchChatPartners>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchChatPartners<TData = Awaited<ReturnType<typeof searchChatPartners>>, TError = ErrorType<GlobalErrorCodeResponse>>(
+ params: SearchChatPartnersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchChatPartners>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Search chat partners
+ */
+
+export function useSearchChatPartners<TData = Awaited<ReturnType<typeof searchChatPartners>>, TError = ErrorType<GlobalErrorCodeResponse>>(
+ params: SearchChatPartnersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchChatPartners>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSearchChatPartnersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
  * Returns messages for a conversation with cursor-based pagination.
  * @summary Get message history
  */

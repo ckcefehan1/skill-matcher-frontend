@@ -27,7 +27,8 @@ import type {
   AuthResponse,
   ChangePasswordRequest,
   GlobalErrorCodeResponse,
-  LoginRequest
+  LoginRequest,
+  WsTicketResponse
 } from '../../model';
 
 import { customInstance } from '../../../axios-instance';
@@ -39,6 +40,68 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * Issues a short-lived, one-time ticket for STOMP CONNECT authentication. The SPA cannot read the httpOnly access_token cookie, so it sends this ticket as the 'ticket' native header when opening the WebSocket connection.
+ * @summary Issue WebSocket ticket
+ */
+export const wsTicket = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<WsTicketResponse>(
+      {url: `/api/auth/ws-ticket`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getWsTicketMutationOptions = <TError = ErrorType<GlobalErrorCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wsTicket>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof wsTicket>>, TError,void, TContext> => {
+
+const mutationKey = ['wsTicket'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof wsTicket>>, void> = () => {
+          
+
+          return  wsTicket(requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WsTicketMutationResult = NonNullable<Awaited<ReturnType<typeof wsTicket>>>
+    
+    export type WsTicketMutationError = ErrorType<GlobalErrorCodeResponse>
+
+    /**
+ * @summary Issue WebSocket ticket
+ */
+export const useWsTicket = <TError = ErrorType<GlobalErrorCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wsTicket>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof wsTicket>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getWsTicketMutationOptions(options), queryClient);
+    }
+    /**
  * Uses the refresh_token cookie to issue a new access token. The refresh token is rotated on every use; reuse of a rotated token revokes the whole token family.
  * @summary Refresh access token
  */
@@ -227,7 +290,7 @@ export const useLogin = <TError = ErrorType<GlobalErrorCodeResponse>,
       return useMutation(getLoginMutationOptions(options), queryClient);
     }
     /**
- * Changes the password for the authenticated user. Revokes all refresh tokens.
+ * Changes the password for the authenticated user. Revokes all refresh tokens and clears the auth cookies.
  * @summary Change password
  */
 export const changePassword = (
