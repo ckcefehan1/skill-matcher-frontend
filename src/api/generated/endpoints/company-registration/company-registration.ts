@@ -15,7 +15,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  RegisterCompanyRequest
+  AuthResponse,
+  CompleteRegistrationRequest,
+  RegisterCompanyRequest,
+  ResendRegistrationCodeRequest,
+  VerifyRegistrationCodeRequest,
+  VerifyRegistrationCodeResponse
 } from '../../model';
 
 import { customInstance } from '../../../axios-instance';
@@ -27,7 +32,135 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Creates a disabled company plus its first ADMIN and sends an invitation email. The company is activated when the invite is accepted. Always answered the same way, whether the email or the company name is already taken or not.
+ * Checks the 6-digit code without consuming it. Unknown email and wrong code return the identical response, so the endpoint cannot enumerate registrations.
+ * @summary Verify registration code
+ */
+export const verifyCode = (
+    verifyRegistrationCodeRequest: VerifyRegistrationCodeRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<VerifyRegistrationCodeResponse>(
+      {url: `/api/public/companies/verify`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: verifyRegistrationCodeRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getVerifyCodeMutationOptions = <TError = ErrorType<VerifyRegistrationCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyCode>>, TError,{data: VerifyRegistrationCodeRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyCode>>, TError,{data: VerifyRegistrationCodeRequest}, TContext> => {
+
+const mutationKey = ['verifyCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyCode>>, {data: VerifyRegistrationCodeRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  verifyCode(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyCodeMutationResult = NonNullable<Awaited<ReturnType<typeof verifyCode>>>
+    export type VerifyCodeMutationBody = VerifyRegistrationCodeRequest
+    export type VerifyCodeMutationError = ErrorType<VerifyRegistrationCodeResponse>
+
+    /**
+ * @summary Verify registration code
+ */
+export const useVerifyCode = <TError = ErrorType<VerifyRegistrationCodeResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyCode>>, TError,{data: VerifyRegistrationCodeRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof verifyCode>>,
+        TError,
+        {data: VerifyRegistrationCodeRequest},
+        TContext
+      > => {
+      return useMutation(getVerifyCodeMutationOptions(options), queryClient);
+    }
+    /**
+ * Replaces the current code and restarts its validity. Always answered the same way, whether the email is registered or not.
+ * @summary Resend registration code
+ */
+export const resendCode = (
+    resendRegistrationCodeRequest: ResendRegistrationCodeRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/public/companies/resend-code`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resendRegistrationCodeRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getResendCodeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resendCode>>, TError,{data: ResendRegistrationCodeRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof resendCode>>, TError,{data: ResendRegistrationCodeRequest}, TContext> => {
+
+const mutationKey = ['resendCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resendCode>>, {data: ResendRegistrationCodeRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  resendCode(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResendCodeMutationResult = NonNullable<Awaited<ReturnType<typeof resendCode>>>
+    export type ResendCodeMutationBody = ResendRegistrationCodeRequest
+    export type ResendCodeMutationError = ErrorType<void>
+
+    /**
+ * @summary Resend registration code
+ */
+export const useResendCode = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resendCode>>, TError,{data: ResendRegistrationCodeRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resendCode>>,
+        TError,
+        {data: ResendRegistrationCodeRequest},
+        TContext
+      > => {
+      return useMutation(getResendCodeMutationOptions(options), queryClient);
+    }
+    /**
+ * Creates a disabled company plus its first ADMIN and emails a 6-digit code. The company is activated when the code flow completes. Always answered the same way, whether the email or the company name is already taken or not.
  * @summary Register a company
  */
 export const registerCompany = (
@@ -89,5 +222,69 @@ export const useRegisterCompany = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRegisterCompanyMutationOptions(options), queryClient);
+    }
+    /**
+ * Re-checks the code, sets password and profile, activates user and company. Sets httpOnly access_token and refresh_token cookies.
+ * @summary Complete registration
+ */
+export const completeRegistration = (
+    completeRegistrationRequest: CompleteRegistrationRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AuthResponse>(
+      {url: `/api/public/companies/complete`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: completeRegistrationRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCompleteRegistrationMutationOptions = <TError = ErrorType<AuthResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeRegistration>>, TError,{data: CompleteRegistrationRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeRegistration>>, TError,{data: CompleteRegistrationRequest}, TContext> => {
+
+const mutationKey = ['completeRegistration'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeRegistration>>, {data: CompleteRegistrationRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  completeRegistration(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteRegistrationMutationResult = NonNullable<Awaited<ReturnType<typeof completeRegistration>>>
+    export type CompleteRegistrationMutationBody = CompleteRegistrationRequest
+    export type CompleteRegistrationMutationError = ErrorType<AuthResponse>
+
+    /**
+ * @summary Complete registration
+ */
+export const useCompleteRegistration = <TError = ErrorType<AuthResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeRegistration>>, TError,{data: CompleteRegistrationRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof completeRegistration>>,
+        TError,
+        {data: CompleteRegistrationRequest},
+        TContext
+      > => {
+      return useMutation(getCompleteRegistrationMutationOptions(options), queryClient);
     }
     
