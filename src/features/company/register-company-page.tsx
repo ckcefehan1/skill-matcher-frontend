@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, Navigate, useNavigate } from '@tanstack/react-router';
-import { MailCheck } from 'lucide-react';
+import { MailOpen } from 'lucide-react';
 import {
   useCompleteRegistration,
   useRegisterCompany,
@@ -204,7 +204,7 @@ export function RegisterCompanyPage() {
       <Card>
         <CardHeader className={step === 'code' ? 'text-center' : undefined}>
           {step === 'code' && (
-            <MailCheck
+            <MailOpen
               className="mx-auto h-10 w-10 text-muted-foreground"
               strokeWidth={1.5}
               aria-hidden
