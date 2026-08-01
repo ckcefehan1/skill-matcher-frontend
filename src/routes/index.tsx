@@ -6,6 +6,8 @@ import { LoginPage } from '@/features/auth/login-page';
 import { PasswordResetPage } from '@/features/auth/password-reset-page';
 import { PasswordResetConfirmPage } from '@/features/auth/password-reset-confirm-page';
 import { InvitationAcceptPage } from '@/features/auth/invitation-accept-page';
+import { RegisterCompanyPage } from '@/features/company/register-company-page';
+import { SuperadminCompaniesPage } from '@/features/superadmin/superadmin-companies-page';
 import { ChangePasswordPage } from '@/features/auth/change-password-page';
 import { AdminUsersPage } from '@/features/admin/admin-users-page';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
@@ -22,6 +24,12 @@ const loginRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: '/login',
   component: LoginPage,
+});
+
+const registerCompanyRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/register',
+  component: RegisterCompanyPage,
 });
 
 const invitationAcceptRoute = createRoute({
@@ -125,6 +133,18 @@ const adminSkillsRoute = createRoute({
   component: AdminSkillsPage,
 });
 
+const superadminCompaniesRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: '/superadmin/companies',
+  beforeLoad: () => {
+    const { user } = useAuthStore.getState();
+    if (user?.role !== 'SUPERADMIN') {
+      throw redirect({ to: '/' });
+    }
+  },
+  component: SuperadminCompaniesPage,
+});
+
 const changePasswordRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: '/change-password',
@@ -134,6 +154,7 @@ const changePasswordRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([
     loginRoute,
+    registerCompanyRoute,
     invitationAcceptRoute,
     passwordResetRoute,
     passwordResetConfirmRoute,
@@ -148,6 +169,7 @@ const routeTree = rootRoute.addChildren([
     matchingRoute,
     adminUsersRoute,
     adminSkillsRoute,
+    superadminCompaniesRoute,
     changePasswordRoute,
   ]),
 ]);
