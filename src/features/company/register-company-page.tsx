@@ -246,13 +246,12 @@ export function RegisterCompanyPage() {
           )}
 
           {step === 'code' && (
-            <div className="flex flex-col items-center gap-6 pt-2">
-              <div className="flex flex-col items-center gap-3">
-                <Label id="registration-code-label">6-stelliger Code</Label>
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-2">
                 <div
                   className="flex justify-center gap-3"
                   role="group"
-                  aria-labelledby="registration-code-label"
+                  aria-label="6-stelliger Code"
                 >
                   {digits.map((digit, i) => (
                     <Input
@@ -272,29 +271,33 @@ export function RegisterCompanyPage() {
                     />
                   ))}
                 </div>
-                {/* fixed height so the boxes don't jump when a message appears */}
-                <div className="flex min-h-5 items-center justify-center">
-                  {verifyMutation.isPending && (
-                    <p className="text-sm text-muted-foreground">Prüfen…</p>
-                  )}
-                  {verifyMutation.data?.valid === false && (
-                    <p className="text-sm text-destructive">
-                      Code ungültig oder abgelaufen.
-                    </p>
-                  )}
-                  {verifyMutation.isError && (
-                    <p className="text-sm text-destructive">
-                      {rateLimited
-                        ? 'Zu viele Versuche. Bitte später erneut versuchen.'
-                        : 'Prüfung fehlgeschlagen. Bitte erneut versuchen.'}
-                    </p>
-                  )}
-                  {resendMutation.isSuccess && !verifyMutation.isPending && (
-                    <p className="text-sm text-muted-foreground">
-                      Neuer Code gesendet.
-                    </p>
-                  )}
-                </div>
+                {(verifyMutation.isPending ||
+                  verifyMutation.data?.valid === false ||
+                  verifyMutation.isError ||
+                  resendMutation.isSuccess) && (
+                  <div className="flex items-center justify-center">
+                    {verifyMutation.isPending && (
+                      <p className="text-sm text-muted-foreground">Prüfen…</p>
+                    )}
+                    {verifyMutation.data?.valid === false && (
+                      <p className="text-sm text-destructive">
+                        Code ungültig oder abgelaufen.
+                      </p>
+                    )}
+                    {verifyMutation.isError && (
+                      <p className="text-sm text-destructive">
+                        {rateLimited
+                          ? 'Zu viele Versuche. Bitte später erneut versuchen.'
+                          : 'Prüfung fehlgeschlagen. Bitte erneut versuchen.'}
+                      </p>
+                    )}
+                    {resendMutation.isSuccess && !verifyMutation.isPending && (
+                      <p className="text-sm text-muted-foreground">
+                        Neuer Code gesendet.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <Button
                 type="button"
