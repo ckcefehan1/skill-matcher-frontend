@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -51,6 +51,8 @@ type AccountFormValues = z.infer<typeof accountSchema>;
 
 type Step = 'form' | 'code' | 'account';
 
+const CODE_LENGTH = 6;
+
 export function RegisterCompanyPage() {
   usePageTitle('Unternehmen registrieren');
   const navigate = useNavigate();
@@ -64,7 +66,9 @@ export function RegisterCompanyPage() {
 
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [digits, setDigits] = useState<string[]>(() => Array(CODE_LENGTH).fill(''));
+  const digitRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const code = digits.join('');
   // auto-verify fires once per distinct value, otherwise every typo correction
   // would burn one of the 5 server-side attempts
   const lastVerifiedRef = useRef<string | null>(null);
@@ -91,9 +95,50 @@ export function RegisterCompanyPage() {
       },
     );
 
-  const onCodeChange = (value: string) => {
-    setCode(value.replace(/\D/g, '').slice(0, 6));
+  const onDigitChange = (index: number, value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length > 1) {
+      // autofill (one-time-code) and paste deliver the whole code at once
+      setDigits(Array.from({ length: CODE_LENGTH }, (_, i) => cleaned[i] ?? ''));
+      verifyMutation.reset();
+      digitRefs.current[Math.min(cleaned.length, CODE_LENGTH) - 1]?.focus();
+      return;
+    }
+    setDigits((prev) => {
+      const next = [...prev];
+      next[index] = cleaned;
+      return next;
+    });
     verifyMutation.reset();
+    if (cleaned && index < CODE_LENGTH - 1) {
+      digitRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const onDigitKeyDown = (
+    index: number,
+    e: KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === 'Backspace' && !digits[index] && index > 0) {
+      digitRefs.current[index - 1]?.focus();
+      setDigits((prev) => {
+        const next = [...prev];
+        next[index - 1] = '';
+        return next;
+      });
+      verifyMutation.reset();
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      digitRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < CODE_LENGTH - 1) {
+      digitRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const resetCode = () => {
+    setDigits(Array(CODE_LENGTH).fill(''));
+    lastVerifiedRef.current = null;
+    verifyMutation.reset();
+    digitRefs.current[0]?.focus();
   };
 
   const verifiedCode = code;
@@ -114,13 +159,7 @@ export function RegisterCompanyPage() {
   const onResend = () =>
     resendMutation.mutate(
       { data: { email } },
-      {
-        onSuccess: () => {
-          setCode('');
-          lastVerifiedRef.current = null;
-          verifyMutation.reset();
-        },
-      },
+      { onSuccess: resetCode },
     );
 
   const onAccountSubmit = (values: AccountFormValues) =>
@@ -172,7 +211,7 @@ export function RegisterCompanyPage() {
             {step === 'form' &&
               'Lege deinen Firmen-Account an. Wir schicken dir einen Code per E-Mail.'}
             {step === 'code' &&
-              `Falls wir den Account anlegen konnten, ist eine E-Mail mit einem 6-stelligen Code an ${email} unterwegs.`}
+              `Wir haben einen 6-stelligen Code an ${email} gesendet.`}
             {step === 'account' && `Richte deinen Account für ${email} ein.`}
           </CardDescription>
         </CardHeader>
@@ -208,20 +247,31 @@ export function RegisterCompanyPage() {
 
           {step === 'code' && (
             <div className="flex flex-col gap-4">
-              {/* deliberately neutral: a specific answer would tell an
-                  attacker which companies and emails already exist */}
               <div className="flex flex-col gap-2">
-                <Label htmlFor="registration-code">6-stelliger Code</Label>
-                <Input
-                  id="registration-code"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => onCodeChange(e.target.value)}
-                  aria-invalid={verifyMutation.data?.valid === false}
-                  className="tracking-widest"
-                />
+                <Label id="registration-code-label">6-stelliger Code</Label>
+                <div
+                  className="flex gap-2"
+                  role="group"
+                  aria-labelledby="registration-code-label"
+                >
+                  {digits.map((digit, i) => (
+                    <Input
+                      key={i}
+                      ref={(el) => {
+                        digitRefs.current[i] = el;
+                      }}
+                      inputMode="numeric"
+                      autoComplete={i === 0 ? 'one-time-code' : 'off'}
+                      autoFocus={i === 0}
+                      value={digit}
+                      onChange={(e) => onDigitChange(i, e.target.value)}
+                      onKeyDown={(e) => onDigitKeyDown(i, e)}
+                      aria-label={`Ziffer ${i + 1}`}
+                      aria-invalid={verifyMutation.data?.valid === false}
+                      className="h-12 w-10 text-center text-lg"
+                    />
+                  ))}
+                </div>
                 {verifyMutation.isPending && (
                   <p className="text-sm text-muted-foreground">Prüfen…</p>
                 )}
@@ -240,7 +290,7 @@ export function RegisterCompanyPage() {
               </div>
               {resendMutation.isSuccess && (
                 <p className="text-sm text-muted-foreground">
-                  Falls der Account existiert, ist ein neuer Code unterwegs.
+                  Neuer Code gesendet.
                 </p>
               )}
               <Button
@@ -331,9 +381,7 @@ export function RegisterCompanyPage() {
                       type="button"
                       variant="outline"
                       onClick={() => {
-                        setCode('');
-                        lastVerifiedRef.current = null;
-                        verifyMutation.reset();
+                        resetCode();
                         completeMutation.reset();
                         setStep('code');
                       }}
