@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
+  Building2,
   CalendarDays,
   FolderKanban,
   KeyRound,
@@ -30,9 +31,18 @@ const NAV_ITEMS = [
 
 const ADMIN_ITEM = { to: '/admin/users', label: 'Benutzer', icon: Users } as const;
 const ADMIN_SKILLS_ITEM = { to: '/admin/skills', label: 'Skills', icon: Wrench } as const;
+const SUPERADMIN_ITEM = {
+  to: '/superadmin/companies',
+  label: 'Unternehmen',
+  icon: Building2,
+} as const;
 
 // Admins verwalten Benutzer und Skill-Relationen, haben aber keine eigenen Skills/Verfügbarkeit/Matches
 export function navItemsForRole(role?: string) {
+  // Superadmins gehören zu keinem Kunden-Tenant und sehen daher nur die Plattformverwaltung
+  if (role === 'SUPERADMIN') {
+    return [SUPERADMIN_ITEM];
+  }
   if (role === 'ADMIN') {
     return [...NAV_ITEMS.slice(0, 2), ADMIN_SKILLS_ITEM, ADMIN_ITEM];
   }

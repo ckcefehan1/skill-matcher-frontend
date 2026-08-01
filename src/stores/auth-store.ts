@@ -7,7 +7,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'ADMIN' | 'PROJECTMANAGER' | 'EMPLOYER';
+  role: 'SUPERADMIN' | 'ADMIN' | 'PROJECTMANAGER' | 'EMPLOYER';
 }
 
 interface AuthState {

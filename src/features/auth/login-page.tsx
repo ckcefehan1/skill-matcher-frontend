@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, Link, useSearch } from '@tanstack/react-router';
 import { useLogin } from '@/api/generated/endpoints/authentication/authentication';
+import { useGetPublicConfig } from '@/api/generated/endpoints/public-config/public-config';
 import { PasswordInput } from './password-input';
 import { useAuthStore } from '@/stores/auth-store';
 import type { User } from '@/stores/auth-store';
@@ -34,6 +35,7 @@ export function LoginPage() {
   };
   const storeLogin = useAuthStore((s) => s.login);
   const loginMutation = useLogin();
+  const { data: config } = useGetPublicConfig();
 
   const {
     register,
@@ -146,10 +148,19 @@ export function LoginPage() {
           </form>
         </CardContent>
       </Card>
-      <p className="text-center text-xs text-muted-foreground">
-        Zugang nur per Einladung. Bei Problemen wende dich an deinen
-        Administrator.
-      </p>
+      {config?.registrationEnabled ? (
+        <p className="text-center text-sm text-muted-foreground">
+          Noch kein Firmen-Account?{' '}
+          <Link to="/register" className="text-foreground hover:underline">
+            Unternehmen registrieren
+          </Link>
+        </p>
+      ) : (
+        <p className="text-center text-xs text-muted-foreground">
+          Zugang nur per Einladung. Bei Problemen wende dich an deinen
+          Administrator.
+        </p>
+      )}
     </AuthShell>
   );
 }

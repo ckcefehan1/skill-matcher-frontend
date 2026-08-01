@@ -113,6 +113,14 @@ export const authenticatedRoute = createRoute({
           search: { redirect: location.href },
         });
       }
+      // Superadmins gehören zu keinem Tenant — jede Kundenseite liefe ins Leere
+      if (
+        user.role === 'SUPERADMIN' &&
+        !location.pathname.startsWith('/superadmin') &&
+        location.pathname !== '/change-password'
+      ) {
+        throw redirect({ to: '/superadmin/companies' });
+      }
     },
     component: AuthenticatedLayout,
   });
