@@ -201,7 +201,7 @@ export function RegisterCompanyPage() {
   return (
     <AuthShell wide>
       <Card>
-        <CardHeader>
+        <CardHeader className={step === 'code' ? 'text-center' : undefined}>
           <CardTitle className="text-xl tracking-tight">
             {step === 'form' && 'Unternehmen registrieren'}
             {step === 'code' && 'Code eingeben'}
@@ -246,11 +246,11 @@ export function RegisterCompanyPage() {
           )}
 
           {step === 'code' && (
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col items-center gap-6 pt-2">
+              <div className="flex flex-col items-center gap-3">
                 <Label id="registration-code-label">6-stelliger Code</Label>
                 <div
-                  className="flex gap-2"
+                  className="flex justify-center gap-3"
                   role="group"
                   aria-labelledby="registration-code-label"
                 >
@@ -268,31 +268,34 @@ export function RegisterCompanyPage() {
                       onKeyDown={(e) => onDigitKeyDown(i, e)}
                       aria-label={`Ziffer ${i + 1}`}
                       aria-invalid={verifyMutation.data?.valid === false}
-                      className="h-12 w-10 text-center text-lg"
+                      className="h-14 w-12 text-center text-xl"
                     />
                   ))}
                 </div>
-                {verifyMutation.isPending && (
-                  <p className="text-sm text-muted-foreground">Prüfen…</p>
-                )}
-                {verifyMutation.data?.valid === false && (
-                  <p className="text-sm text-destructive">
-                    Code ungültig oder abgelaufen.
-                  </p>
-                )}
-                {verifyMutation.isError && (
-                  <p className="text-sm text-destructive">
-                    {rateLimited
-                      ? 'Zu viele Versuche. Bitte später erneut versuchen.'
-                      : 'Prüfung fehlgeschlagen. Bitte erneut versuchen.'}
-                  </p>
-                )}
+                {/* fixed height so the boxes don't jump when a message appears */}
+                <div className="flex min-h-5 items-center justify-center">
+                  {verifyMutation.isPending && (
+                    <p className="text-sm text-muted-foreground">Prüfen…</p>
+                  )}
+                  {verifyMutation.data?.valid === false && (
+                    <p className="text-sm text-destructive">
+                      Code ungültig oder abgelaufen.
+                    </p>
+                  )}
+                  {verifyMutation.isError && (
+                    <p className="text-sm text-destructive">
+                      {rateLimited
+                        ? 'Zu viele Versuche. Bitte später erneut versuchen.'
+                        : 'Prüfung fehlgeschlagen. Bitte erneut versuchen.'}
+                    </p>
+                  )}
+                  {resendMutation.isSuccess && !verifyMutation.isPending && (
+                    <p className="text-sm text-muted-foreground">
+                      Neuer Code gesendet.
+                    </p>
+                  )}
+                </div>
               </div>
-              {resendMutation.isSuccess && (
-                <p className="text-sm text-muted-foreground">
-                  Neuer Code gesendet.
-                </p>
-              )}
               <Button
                 type="button"
                 variant="outline"
