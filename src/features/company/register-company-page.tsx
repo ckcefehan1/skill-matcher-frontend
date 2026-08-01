@@ -53,6 +53,10 @@ type AccountFormValues = z.infer<typeof accountSchema>;
 type Step = 'form' | 'code' | 'account';
 
 const CODE_LENGTH = 6;
+// mirrors invitation.resend-cooldown-seconds — the server silently drops resends
+// inside that window, so without the countdown the button would claim a mail it
+// never sent
+const RESEND_COOLDOWN_SECONDS = 60;
 
 export function RegisterCompanyPage() {
   usePageTitle('Unternehmen registrieren');
@@ -73,6 +77,14 @@ export function RegisterCompanyPage() {
   // auto-verify fires once per distinct value, otherwise every typo correction
   // would burn one of the 5 server-side attempts
   const lastVerifiedRef = useRef<string | null>(null);
+  const [resendIn, setResendIn] = useState(0);
+
+  // dropping the mutation result without dropping the guard would leave a code the
+  // user already tried unverifiable — deleting a digit and retyping it does nothing
+  const clearVerifyResult = () => {
+    lastVerifiedRef.current = null;
+    verifyMutation.reset();
+  };
 
   const companyForm = useForm<CompanyFormValues>({
     resolver: zodResolver(companySchema),
@@ -92,6 +104,7 @@ export function RegisterCompanyPage() {
         onSuccess: () => {
           setEmail(values.adminEmail);
           setStep('code');
+          setResendIn(RESEND_COOLDOWN_SECONDS);
         },
       },
     );
@@ -101,7 +114,7 @@ export function RegisterCompanyPage() {
     if (cleaned.length > 1) {
       // autofill (one-time-code) and paste deliver the whole code at once
       setDigits(Array.from({ length: CODE_LENGTH }, (_, i) => cleaned[i] ?? ''));
-      verifyMutation.reset();
+      clearVerifyResult();
       digitRefs.current[Math.min(cleaned.length, CODE_LENGTH) - 1]?.focus();
       return;
     }
@@ -110,7 +123,7 @@ export function RegisterCompanyPage() {
       next[index] = cleaned;
       return next;
     });
-    verifyMutation.reset();
+    clearVerifyResult();
     if (cleaned && index < CODE_LENGTH - 1) {
       digitRefs.current[index + 1]?.focus();
     }
@@ -127,7 +140,7 @@ export function RegisterCompanyPage() {
         next[index - 1] = '';
         return next;
       });
-      verifyMutation.reset();
+      clearVerifyResult();
     } else if (e.key === 'ArrowLeft' && index > 0) {
       digitRefs.current[index - 1]?.focus();
     } else if (e.key === 'ArrowRight' && index < CODE_LENGTH - 1) {
@@ -137,30 +150,39 @@ export function RegisterCompanyPage() {
 
   const resetCode = () => {
     setDigits(Array(CODE_LENGTH).fill(''));
-    lastVerifiedRef.current = null;
-    verifyMutation.reset();
+    clearVerifyResult();
     digitRefs.current[0]?.focus();
   };
 
-  const verifiedCode = code;
   useEffect(() => {
-    if (step !== 'code' || verifiedCode.length !== 6) return;
-    if (lastVerifiedRef.current === verifiedCode) return;
-    lastVerifiedRef.current = verifiedCode;
+    if (step !== 'code' || code.length !== CODE_LENGTH) return;
+    if (lastVerifiedRef.current === code) return;
+    lastVerifiedRef.current = code;
     verifyMutation.mutate(
-      { data: { email, code: verifiedCode } },
+      { data: { email, code } },
       {
         onSuccess: (res) => {
           if (res.valid) setStep('account');
         },
       },
     );
-  }, [step, verifiedCode, email, verifyMutation]);
+  }, [step, code, email, verifyMutation]);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
 
   const onResend = () =>
     resendMutation.mutate(
       { data: { email } },
-      { onSuccess: resetCode },
+      {
+        onSuccess: () => {
+          resetCode();
+          setResendIn(RESEND_COOLDOWN_SECONDS);
+        },
+      },
     );
 
   const onAccountSubmit = (values: AccountFormValues) =>
@@ -195,9 +217,18 @@ export function RegisterCompanyPage() {
     return <Navigate to="/login" />;
   }
 
-  const rateLimited = [registerMutation, verifyMutation, completeMutation].some(
-    (m) => m.error?.response?.status === 429,
-  );
+  const rateLimited = [
+    registerMutation,
+    verifyMutation,
+    completeMutation,
+    resendMutation,
+  ].some((m) => m.error?.response?.status === 429);
+
+  // a rejected code is the one complete error the user can act on, everything else
+  // (password rules, server trouble) must not send them back to the code step
+  const codeRejected =
+    completeMutation.error?.response?.data?.errorCode ===
+    'INVALID_REGISTRATION_CODE';
 
   return (
     <AuthShell wide>
@@ -282,6 +313,7 @@ export function RegisterCompanyPage() {
                 {(verifyMutation.isPending ||
                   verifyMutation.data?.valid === false ||
                   verifyMutation.isError ||
+                  resendMutation.isError ||
                   resendMutation.isSuccess) && (
                   <div className="flex items-center justify-center">
                     {verifyMutation.isPending && (
@@ -299,6 +331,13 @@ export function RegisterCompanyPage() {
                           : 'Prüfung fehlgeschlagen. Bitte erneut versuchen.'}
                       </p>
                     )}
+                    {resendMutation.isError && (
+                      <p className="text-sm text-destructive">
+                        {rateLimited
+                          ? 'Zu viele Versuche. Bitte später erneut versuchen.'
+                          : 'Senden fehlgeschlagen. Bitte erneut versuchen.'}
+                      </p>
+                    )}
                     {resendMutation.isSuccess && !verifyMutation.isPending && (
                       <p className="text-sm text-muted-foreground">
                         Neuer Code gesendet.
@@ -312,11 +351,13 @@ export function RegisterCompanyPage() {
                 variant="outline"
                 className="w-full"
                 onClick={onResend}
-                disabled={resendMutation.isPending}
+                disabled={resendMutation.isPending || resendIn > 0}
               >
                 {resendMutation.isPending
                   ? 'Senden…'
-                  : 'Code erneut senden'}
+                  : resendIn > 0
+                    ? `Code erneut senden (${resendIn}s)`
+                    : 'Code erneut senden'}
               </Button>
             </div>
           )}
@@ -388,9 +429,11 @@ export function RegisterCompanyPage() {
                   <p className="text-sm text-destructive">
                     {rateLimited
                       ? 'Zu viele Versuche. Bitte später erneut versuchen.'
-                      : 'Code ungültig oder abgelaufen. Fordere einen neuen Code an.'}
+                      : codeRejected
+                        ? 'Code ungültig oder abgelaufen. Fordere einen neuen Code an.'
+                        : 'Registrierung fehlgeschlagen. Bitte Eingaben prüfen.'}
                   </p>
-                  {!rateLimited && (
+                  {codeRejected && !rateLimited && (
                     <Button
                       type="button"
                       variant="outline"
